@@ -1,0 +1,14 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "Example Calendar App",
+  "main": "elm.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kieran Trezona-le Comte",
+  "license": "MIT",
+  "dependencies": {
+    "bulma": "^0.6.2"
+  }
+}

@@ -8,11 +8,16 @@ import Calendar
 
 main : Program Never Model Msg
 main =
-    Html.beginnerProgram
-        { model = model
+    Html.program
+        { init = init
         , update = update
         , view = view
+        , subscriptions = subscriptions
         }
+
+
+
+-- MODEL
 
 
 type alias Model =
@@ -28,8 +33,8 @@ type alias Event =
     }
 
 
-model : Model
-model =
+init : ( Model, Cmd Msg )
+init =
     let
         arbitraryDate =
             Date.fromParts 2018 Date.Mar 22 10 0 0 0
@@ -37,6 +42,11 @@ model =
         { calendarModel =
             Calendar.init Calendar.Daily arbitraryDate
         }
+            ! []
+
+
+
+-- UPDATE
 
 
 type Msg
@@ -44,7 +54,7 @@ type Msg
     | SelectDate Date
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UpdateCalendar calendarMsg ->
@@ -57,13 +67,17 @@ update msg model =
             in
                 case maybeMsg of
                     Nothing ->
-                        newModel
+                        newModel ! []
 
                     Just updateMsg ->
                         update updateMsg newModel
 
         SelectDate date ->
-            model
+            model ! []
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg
@@ -72,6 +86,18 @@ view model =
         -- Wrap all msgs from the calendar view in our Msg type so we
         -- can pass them on with our own msgs to the Elm Runtime.
         [ Html.map UpdateCalendar (Calendar.view model.calendarModel) ]
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Calendar.subscriptions model.calendarModel
+            |> Sub.map UpdateCalendar
+        ]
 
 
 
