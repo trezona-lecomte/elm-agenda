@@ -1,4 +1,12 @@
-module Style exposing (..)
+module Style exposing (class)
+
+import Html
+import Html.Attributes as Html
+
+
+class : String -> Html.Attribute msg
+class class =
+    Html.class <| "elm-agenda__" ++ class
 
 
 containerClass : String
@@ -24,6 +32,11 @@ dayCalendarClass =
 hoursColumnClass : String
 hoursColumnClass =
     "elm-agenda__hours-column"
+
+
+hoursItemClass : String
+hoursItemClass =
+    "elm-agenda__hours-item"
 
 
 scheduleColumnClass : String

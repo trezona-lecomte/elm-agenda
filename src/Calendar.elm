@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Labels
-import Style
+import Style as S
 import View.Daily
 
 
@@ -69,9 +69,9 @@ view { activeMode } =
                 Daily ->
                     ( View.Daily.paginationControls ( PreviousPage, NextPage ), View.Daily.calendar )
     in
-        div [ class Style.containerClass ]
-            [ div [ class Style.calendarClass ]
-                [ div [ class Style.calendarHeaderClass ]
+        div [ class "container" ]
+            [ div [ S.class "calendar" ]
+                [ div [ S.class "calendar-header" ]
                     [ viewModeControls
                     , viewControls
                     ]
@@ -82,13 +82,13 @@ view { activeMode } =
 
 viewModeControls : Html Msg
 viewModeControls =
-    div [ class Style.modeControlsClass ]
+    div [ S.class "mode-controls" ]
         (List.map modeButton modes)
 
 
 modeButton : Mode -> Html Msg
 modeButton mode =
-    button [ class Style.buttonClass, onClick (ChangeMode mode) ]
+    button [ class "button", onClick (ChangeMode mode) ]
         [ text <| Labels.changeModeButton mode ]
 
 

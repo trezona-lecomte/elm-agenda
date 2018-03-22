@@ -4,21 +4,50 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Labels
-import Style
+import Style as S
+
+
+paginationControls : ( msg, msg ) -> Html msg
+paginationControls ( prevMsg, nextMsg ) =
+    div [ S.class "pagination-controls" ]
+        [ paginateButton Labels.previousPageButton prevMsg
+        , paginateButton Labels.nextPageButton nextMsg
+        ]
+
+
+paginateButton : String -> msg -> Html msg
+paginateButton label msg =
+    button [ class "button", onClick msg ] [ text label ]
 
 
 calendar : Html msg
 calendar =
-    div [ class Style.dayCalendarClass ]
-        [ div [ class Style.hoursColumnClass ]
-            (text "Time" :: List.map viewHour hours)
-        , div [ class Style.scheduleColumnClass ] [ text "Schedule" ]
+    div [ S.class "day-calendar" ]
+        [ div [ S.class "hours-column" ]
+            (viewHoursHeader :: List.map viewHour hours)
+        , div [ S.class "schedule-column" ]
+            (viewScheduleHeader :: List.map viewHourInSchedule hours)
         ]
+
+
+viewHoursHeader : Html msg
+viewHoursHeader =
+    div [ S.class "hours-header" ] [ text "Time" ]
+
+
+viewScheduleHeader : Html msg
+viewScheduleHeader =
+    div [ S.class "schedule-header" ] [ text "Schedule" ]
 
 
 viewHour : String -> Html msg
 viewHour hour =
-    div [] [ text hour ]
+    div [ S.class "hours-item" ] [ text hour ]
+
+
+viewHourInSchedule : String -> Html msg
+viewHourInSchedule _ =
+    div [ S.class "schedule-item" ] []
 
 
 hours : List String
@@ -48,16 +77,3 @@ hours =
     , "11pm"
     , "12pm"
     ]
-
-
-paginationControls : ( msg, msg ) -> Html msg
-paginationControls ( prevMsg, nextMsg ) =
-    div [ class Style.paginationControlsClass ]
-        [ paginateButton Labels.previousPageButton prevMsg
-        , paginateButton Labels.nextPageButton nextMsg
-        ]
-
-
-paginateButton : String -> msg -> Html msg
-paginateButton label msg =
-    button [ class Style.buttonClass, onClick msg ] [ text label ]
