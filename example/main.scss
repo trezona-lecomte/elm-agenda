@@ -51,9 +51,14 @@
     grid-column: 10;
 }
 
+.elm-agenda__pagination-controls {
+    display: flex;
+    justify-content: space-between;
+}
+
 .elm-agenda__day-calendar {
     display: grid;
-    grid-template-columns: 1fr 9fr;
+    grid-template-columns: 1fr 7fr;
     grid-template-rows: 1fr;
 }
 
@@ -62,9 +67,38 @@
     grid-template-rows: repeat(24, minmax(50px, 1px));
 }
 
+.elm-agenda__hours-header {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.elm-agenda__hours-item {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+}
+
 .elm-agenda__schedule-column {
     display: grid;
-    grid-template-rows: repeat(24, 1fr);
+    grid-template-rows: 1.5fr repeat(23, 1fr);
+}
+
+.elm-agenda__schedule-header {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.elm-agenda__schedule-item {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+    border-top: dotted 0.7px;
 }
 
 // 6. Import the rest of Bulma
