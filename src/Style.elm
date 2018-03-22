@@ -11,6 +11,26 @@ calendarClass =
     "elm-agenda__calendar"
 
 
+calendarHeaderClass : String
+calendarHeaderClass =
+    "elm-agenda__calendar-header"
+
+
+dayCalendarClass : String
+dayCalendarClass =
+    "elm-agenda__day-calendar"
+
+
+hoursColumnClass : String
+hoursColumnClass =
+    "elm-agenda__hours-column"
+
+
+scheduleColumnClass : String
+scheduleColumnClass =
+    "elm-agenda__schedule-column"
+
+
 buttonClass : String
 buttonClass =
     "elm-agenda__button button"

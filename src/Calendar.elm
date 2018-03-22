@@ -67,12 +67,14 @@ view { activeMode } =
         ( viewControls, viewCalendar ) =
             case activeMode of
                 Daily ->
-                    ( View.Daily.controls ( PreviousPage, NextPage ), View.Daily.calendar )
+                    ( View.Daily.paginationControls ( PreviousPage, NextPage ), View.Daily.calendar )
     in
         div [ class Style.containerClass ]
             [ div [ class Style.calendarClass ]
-                [ viewModeControls
-                , viewControls
+                [ div [ class Style.calendarHeaderClass ]
+                    [ viewModeControls
+                    , viewControls
+                    ]
                 , viewCalendar
                 ]
             ]

@@ -42,5 +42,30 @@
 /* ); */
 /* $colors: map-merge($colors, $addColors); */
 
+.elm-agenda__calendar-header {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+}
+
+.elm-agenda__calendar-header > div:nth-child(2) {
+    grid-column: 10;
+}
+
+.elm-agenda__day-calendar {
+    display: grid;
+    grid-template-columns: 1fr 9fr;
+    grid-template-rows: 1fr;
+}
+
+.elm-agenda__hours-column {
+    display: grid;
+    grid-template-rows: repeat(24, minmax(50px, 1px));
+}
+
+.elm-agenda__schedule-column {
+    display: grid;
+    grid-template-rows: repeat(24, 1fr);
+}
+
 // 6. Import the rest of Bulma
 @import "node_modules/bulma/bulma";
