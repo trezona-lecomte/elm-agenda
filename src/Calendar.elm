@@ -1,5 +1,6 @@
 module Calendar exposing (Mode(..), Msg, Model, init, update, view, subscriptions)
 
+import Config exposing (EventConfig)
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
@@ -78,14 +79,14 @@ update msg model =
 -- VIEW
 
 
-view : Model -> Html Msg
-view { activeMode, currentDate } =
+view : EventConfig event -> List event -> Model -> Html Msg
+view config events { activeMode, currentDate } =
     let
         ( viewControls, viewCalendar ) =
             case activeMode of
                 Daily ->
                     ( View.Daily.paginationControls currentDate ( Today, Previous, Next )
-                    , View.Daily.calendar
+                    , View.Daily.calendar config events
                     )
     in
         div [ class "container" ]

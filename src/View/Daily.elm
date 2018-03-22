@@ -1,5 +1,6 @@
 module View.Daily exposing (calendar, paginationControls)
 
+import Config exposing (EventConfig)
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
@@ -30,13 +31,15 @@ viewButton label msg =
     button [ class "button", onClick msg ] [ text label ]
 
 
-calendar : Html msg
-calendar =
+calendar : EventConfig event -> List event -> Html msg
+calendar config events =
     div [ S.class "day-calendar" ]
         [ div [ S.class "hours-column" ]
             (viewHoursHeader :: List.map viewHour hours)
         , div [ S.class "schedule-column" ]
             (viewScheduleHeader :: List.map viewHourInSchedule hours)
+        , div [ S.class "events-for-day" ]
+            (List.map (viewEvent config) events)
         ]
 
 
@@ -58,6 +61,11 @@ viewHour hour =
 viewHourInSchedule : String -> Html msg
 viewHourInSchedule _ =
     div [ S.class "schedule-item" ] []
+
+
+viewEvent : EventConfig event -> event -> Html msg
+viewEvent config event =
+    div [ S.class "event-item" ] [ text (toString event) ]
 
 
 hours : List String
