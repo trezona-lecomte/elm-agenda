@@ -37,9 +37,10 @@ calendar config events =
         [ div [ S.class "hours-column" ]
             (viewHoursHeader :: List.map viewHour hours)
         , div [ S.class "schedule-column" ]
-            (viewScheduleHeader :: List.map viewHourInSchedule hours)
-        , div [ S.class "events-for-day" ]
-            (List.map (viewEvent config) events)
+            (viewScheduleHeader
+                :: List.map viewHourInSchedule hours
+                ++ List.map (viewEvent config) events
+            )
         ]
 
 
@@ -65,7 +66,29 @@ viewHourInSchedule _ =
 
 viewEvent : EventConfig event -> event -> Html msg
 viewEvent config event =
-    div [ S.class "event-item" ] [ text (toString event) ]
+    div
+        [ S.class "schedule-event-item"
+        , style [ gridRowForEvent ( config.start event, config.finish event ) ]
+        ]
+        [ text <| config.label event ]
+
+
+gridRowForEvent : ( Date, Date ) -> ( String, String )
+gridRowForEvent ( start, finish ) =
+    let
+        gridRowStart =
+            start
+                |> Date.hour
+                |> (+) 1
+                |> toString
+
+        gridRowFinish =
+            finish
+                |> Date.hour
+                |> (+) 1
+                |> toString
+    in
+        ( "grid-row", gridRowStart ++ " / " ++ gridRowFinish )
 
 
 hours : List String

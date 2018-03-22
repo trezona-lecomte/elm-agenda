@@ -5,7 +5,7 @@
 
 // 1. Import the initial variables
 @import "node_modules/bulma/sass/utilities/initial-variables";
-/* @import "node_modules/bulma/sass/utilities/functions"; */
+@import "node_modules/bulma/sass/utilities/functions";
 
 // 2. Set your own initial variables
 // Update blue
@@ -34,7 +34,7 @@
 /* $github-invert: findColorInvert($github); */
 
 // 5. Add new color variables to the color map.
-/* @import "node_modules/bulma/sass/utilities/derived-variables.sass"; */
+@import "node_modules/bulma/sass/utilities/derived-variables.sass";
 /* $addColors: ( */
 /*   "twitter":($twitter, $twitter-invert), */
 /*   "linkedin": ($linkedin, $linkedin-invert), */
@@ -96,6 +96,10 @@
     align-items: center;
     justify-content: center;
     border-top: dotted 0.7px;
+}
+
+.elm-agenda__schedule-event-item {
+    background-color: $primary;
 }
 
 // 6. Import the rest of Bulma
