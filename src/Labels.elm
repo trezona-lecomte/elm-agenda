@@ -1,6 +1,11 @@
 module Labels exposing (..)
 
 
+todayButton : String
+todayButton =
+    "Today"
+
+
 previousPageButton : String
 previousPageButton =
     "<"

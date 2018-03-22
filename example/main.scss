@@ -44,16 +44,13 @@
 
 .elm-agenda__calendar-header {
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
-}
-
-.elm-agenda__calendar-header > div:nth-child(2) {
-    grid-column: 10;
+    grid-template-columns: 7fr 3fr;
 }
 
 .elm-agenda__pagination-controls {
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .elm-agenda__day-calendar {

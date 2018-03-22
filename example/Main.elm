@@ -60,18 +60,13 @@ update msg model =
     case msg of
         UpdateCalendar calendarMsg ->
             let
-                ( updatedCalendar, maybeMsg ) =
+                ( updatedCalendar, calendarCmd ) =
                     Calendar.update calendarMsg model.calendarModel
 
                 newModel =
                     { model | calendarModel = updatedCalendar }
             in
-                case maybeMsg of
-                    Nothing ->
-                        newModel ! []
-
-                    Just updateMsg ->
-                        update updateMsg newModel
+                newModel ! [ Cmd.map UpdateCalendar calendarCmd ]
 
         SelectDate date ->
             model ! []

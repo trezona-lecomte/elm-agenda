@@ -1,5 +1,7 @@
 module View.Daily exposing (calendar, paginationControls)
 
+import Date exposing (Date)
+import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -7,16 +9,24 @@ import Labels
 import Style as S
 
 
-paginationControls : ( msg, msg ) -> Html msg
-paginationControls ( prevMsg, nextMsg ) =
+paginationControls : Date -> ( msg, msg, msg ) -> Html msg
+paginationControls date ( todayMsg, prevMsg, nextMsg ) =
     div [ S.class "pagination-controls" ]
-        [ paginateButton Labels.previousPageButton prevMsg
-        , paginateButton Labels.nextPageButton nextMsg
+        [ viewButton Labels.todayButton todayMsg
+        , viewButton Labels.previousPageButton prevMsg
+        , viewCurrentDate date
+        , viewButton Labels.nextPageButton nextMsg
         ]
 
 
-paginateButton : String -> msg -> Html msg
-paginateButton label msg =
+viewCurrentDate : Date -> Html msg
+viewCurrentDate date =
+    div [ S.class "current-date is-size-6" ]
+        [ text <| Date.toFormattedString "EE MMMM d y" date ]
+
+
+viewButton : String -> msg -> Html msg
+viewButton label msg =
     button [ class "button", onClick msg ] [ text label ]
 
 

@@ -1,11 +1,13 @@
 module Calendar exposing (Mode(..), Msg, Model, init, update, view, subscriptions)
 
 import Date exposing (Date)
+import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Labels
 import Style as S
+import Task
 import View.Daily
 
 
@@ -20,6 +22,13 @@ type alias Model =
 
 type Mode
     = Daily
+
+
+intervalForMode : Mode -> Date.Interval
+intervalForMode mode =
+    case mode of
+        Daily ->
+            Date.Day
 
 
 modes : List Mode
@@ -40,21 +49,29 @@ init mode date =
 
 type Msg
     = ChangeMode Mode
-    | PreviousPage
-    | NextPage
+    | SetDate Date
+    | Today
+    | Previous
+    | Next
 
 
-update : Msg -> Model -> ( Model, Maybe msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChangeMode mode ->
-            ( { model | activeMode = mode }, Nothing )
+            { model | activeMode = mode } ! []
 
-        PreviousPage ->
-            ( model, Nothing )
+        SetDate date ->
+            { model | currentDate = date } ! []
 
-        NextPage ->
-            ( model, Nothing )
+        Today ->
+            ( model, Task.perform SetDate Date.now )
+
+        Previous ->
+            { model | currentDate = Date.add Date.Day -1 model.currentDate } ! []
+
+        Next ->
+            { model | currentDate = Date.add Date.Day 1 model.currentDate } ! []
 
 
 
@@ -62,12 +79,14 @@ update msg model =
 
 
 view : Model -> Html Msg
-view { activeMode } =
+view { activeMode, currentDate } =
     let
         ( viewControls, viewCalendar ) =
             case activeMode of
                 Daily ->
-                    ( View.Daily.paginationControls ( PreviousPage, NextPage ), View.Daily.calendar )
+                    ( View.Daily.paginationControls currentDate ( Today, Previous, Next )
+                    , View.Daily.calendar
+                    )
     in
         div [ class "container" ]
             [ div [ S.class "calendar" ]
