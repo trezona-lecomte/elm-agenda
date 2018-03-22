@@ -3,3 +3,7 @@ elm-stuff
 # elm-repl generated files
 repl-temp-*
 elm.js
+.sass-cache
+main.css
+main.css.map
+node_modules
