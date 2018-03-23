@@ -1,4 +1,4 @@
-module View.Daily exposing (calendar, paginationControls)
+module View.Daily exposing (..)
 
 import Config exposing (EventConfig)
 import Date exposing (Date)
@@ -39,6 +39,7 @@ calendar config events =
         , div [ S.class "schedule-column" ]
             (viewScheduleHeader
                 :: List.map viewHourInSchedule hours
+                ++ List.map viewQuarterHourInSchedule quarterHours
                 ++ List.map (viewEvent config) events
             )
         ]
@@ -61,7 +62,12 @@ viewHour hour =
 
 viewHourInSchedule : String -> Html msg
 viewHourInSchedule _ =
-    div [ S.class "schedule-item" ] []
+    div [ S.class "schedule-hour-item" ] []
+
+
+viewQuarterHourInSchedule : Int -> Html msg
+viewQuarterHourInSchedule q =
+    div [ S.class "schedule-quarter-hour-item" ] []
 
 
 viewEvent : EventConfig event -> event -> Html msg
@@ -70,25 +76,57 @@ viewEvent config event =
         [ S.class "schedule-event-item"
         , style [ gridRowForEvent ( config.start event, config.finish event ) ]
         ]
-        [ text <| config.label event ]
+        [ text <| toString event ]
 
 
 gridRowForEvent : ( Date, Date ) -> ( String, String )
 gridRowForEvent ( start, finish ) =
     let
-        gridRowStart =
+        startHour =
             start
                 |> Date.hour
-                |> (+) 1
+
+        finishHour =
+            finish
+                |> Date.hour
+
+        startQuarterHour =
+            start
+                |> Date.minute
+                |> nearestQuarterHour
+
+        finishQuarterHour =
+            finish
+                |> Date.minute
+                |> nearestQuarterHour
+
+        gridRowStart =
+            startHour
+                |> (*) 4
+                |> (+) startQuarterHour
                 |> toString
 
         gridRowFinish =
-            finish
-                |> Date.hour
-                |> (+) 1
+            finishHour
+                |> (*) 4
+                |> (+) finishQuarterHour
                 |> toString
     in
         ( "grid-row", gridRowStart ++ " / " ++ gridRowFinish )
+
+
+nearestQuarterHour : Int -> Int
+nearestQuarterHour minute =
+    if minute < 7 then
+        0
+    else if minute < 22 then
+        1
+    else if minute < 37 then
+        2
+    else if minute < 52 then
+        3
+    else
+        4
 
 
 hours : List String
@@ -118,3 +156,8 @@ hours =
     , "11pm"
     , "12pm"
     ]
+
+
+quarterHours : List Int
+quarterHours =
+    List.range 1 96

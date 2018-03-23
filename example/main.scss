@@ -61,14 +61,14 @@
 
 .elm-agenda__hours-column {
     display: grid;
-    grid-template-rows: repeat(24, minmax(50px, 1px));
+    grid-template-rows: 100px repeat(24, minmax(100px, 100px));
 }
 
 .elm-agenda__hours-header {
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
 }
 
 .elm-agenda__hours-item {
@@ -80,7 +80,7 @@
 
 .elm-agenda__schedule-column {
     display: grid;
-    grid-template-rows: 1.5fr repeat(23, 1fr);
+    grid-template-rows: 100px repeat(96, minmax(25px, 25px)); // 0.0625
 }
 
 .elm-agenda__schedule-header {
