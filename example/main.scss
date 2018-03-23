@@ -61,7 +61,7 @@
 
 .elm-agenda__hours-column {
     display: grid;
-    grid-template-rows: 100px repeat(24, minmax(100px, 100px));
+    grid-template-rows: 40px repeat(24, minmax(40px, 40px));
 }
 
 .elm-agenda__hours-header {
@@ -80,7 +80,7 @@
 
 .elm-agenda__schedule-column {
     display: grid;
-    grid-template-rows: 100px repeat(96, minmax(25px, 25px)); // 0.0625
+    grid-template-rows: 40px repeat(96, minmax(10px, 10px)); // 0.0625
 }
 
 .elm-agenda__schedule-header {

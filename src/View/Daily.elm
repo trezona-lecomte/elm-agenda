@@ -76,7 +76,7 @@ viewEvent config event =
         [ S.class "schedule-event-item"
         , style [ gridRowForEvent ( config.start event, config.finish event ) ]
         ]
-        [ text <| toString event ]
+        [ text <| config.label event ]
 
 
 gridRowForEvent : ( Date, Date ) -> ( String, String )
