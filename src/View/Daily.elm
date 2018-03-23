@@ -31,18 +31,24 @@ viewButton label msg =
     button [ class "button", onClick msg ] [ text label ]
 
 
-calendar : EventConfig event -> List event -> Html msg
-calendar config events =
-    div [ S.class "day-calendar" ]
-        [ div [ S.class "hours-column" ]
-            (viewHoursHeader :: List.map viewHour hours)
-        , div [ S.class "schedule-column" ]
-            (viewScheduleHeader
-                :: List.map viewHourInSchedule hours
-                ++ List.map viewQuarterHourInSchedule quarterHours
-                ++ List.map (viewEvent config) events
-            )
-        ]
+calendar : Date -> EventConfig event -> List event -> Html msg
+calendar selectedDate config events =
+    let
+        eventsOnSelectedDate =
+            List.filter
+                (\e -> Date.equalBy Date.Day (config.start e) selectedDate)
+                events
+    in
+        div [ S.class "day-calendar" ]
+            [ div [ S.class "hours-column" ]
+                (viewHoursHeader :: List.map viewHour hours)
+            , div [ S.class "schedule-column" ]
+                (viewScheduleHeader
+                    :: List.map viewHourInSchedule hours
+                    ++ List.map viewQuarterHourInSchedule quarterHours
+                    ++ List.map (viewEvent config) eventsOnSelectedDate
+                )
+            ]
 
 
 viewHoursHeader : Html msg

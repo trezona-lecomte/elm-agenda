@@ -17,7 +17,7 @@ import View.Daily
 
 type alias Model =
     { activeMode : Mode
-    , currentDate : Date
+    , selectedDate : Date
     }
 
 
@@ -40,7 +40,7 @@ modes =
 init : Mode -> Date -> Model
 init mode date =
     { activeMode = mode
-    , currentDate = date
+    , selectedDate = date
     }
 
 
@@ -63,16 +63,16 @@ update msg model =
             { model | activeMode = mode } ! []
 
         SetDate date ->
-            { model | currentDate = date } ! []
+            { model | selectedDate = date } ! []
 
         Today ->
             ( model, Task.perform SetDate Date.now )
 
         Previous ->
-            { model | currentDate = Date.add Date.Day -1 model.currentDate } ! []
+            { model | selectedDate = Date.add Date.Day -1 model.selectedDate } ! []
 
         Next ->
-            { model | currentDate = Date.add Date.Day 1 model.currentDate } ! []
+            { model | selectedDate = Date.add Date.Day 1 model.selectedDate } ! []
 
 
 
@@ -80,13 +80,13 @@ update msg model =
 
 
 view : EventConfig event -> List event -> Model -> Html Msg
-view config events { activeMode, currentDate } =
+view config events { activeMode, selectedDate } =
     let
         ( viewControls, viewCalendar ) =
             case activeMode of
                 Daily ->
-                    ( View.Daily.paginationControls currentDate ( Today, Previous, Next )
-                    , View.Daily.calendar config events
+                    ( View.Daily.paginationControls selectedDate ( Today, Previous, Next )
+                    , View.Daily.calendar selectedDate config events
                     )
     in
         div [ class "container" ]
