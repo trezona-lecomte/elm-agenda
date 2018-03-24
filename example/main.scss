@@ -96,10 +96,12 @@
     align-items: center;
     justify-content: center;
     border-top: dotted 0.7px;
+    z-index: 1;
 }
 
 .elm-agenda__schedule-event-item {
     background-color: $primary;
+    z-index: 2;
 }
 
 // 6. Import the rest of Bulma

@@ -1,15 +1,19 @@
-module Calendar exposing (Model, init, update, view, subscriptions)
+module Calendar exposing (Model, init, subscriptions, update, view)
 
+import Basics.Extra exposing (fmod)
+import Calendar.Ports as Ports
+import Calendar.Types exposing (Mode(..), Msg(..))
 import Config exposing (CalendarConfig, EventConfig)
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Labels
 import Mouse
 import Style as S
-import Calendar.Types exposing (Mode(..), Msg(..))
 import Task
 import View.Daily
 
@@ -61,25 +65,103 @@ update calendarConfig eventConfig msg model =
             ( model, Task.perform SetDate Date.now, Nothing )
 
         Previous ->
-            ( { model | selectedDate = Date.add Date.Day -1 model.selectedDate }, Cmd.none, Nothing )
+            ( { model | selectedDate = Date.add Date.Day -1 model.selectedDate }
+            , Cmd.none
+            , Nothing
+            )
 
         Next ->
-            ( { model | selectedDate = Date.add Date.Day 1 model.selectedDate }, Cmd.none, Nothing )
+            ( { model | selectedDate = Date.add Date.Day 1 model.selectedDate }
+            , Cmd.none
+            , Nothing
+            )
 
         StartEventDrag eventId mousePosition ->
-            ( { model | draggingEventId = Just eventId }, Cmd.none, calendarConfig.startEventDrag eventId mousePosition )
+            ( { model | draggingEventId = Just eventId }
+            , Cmd.none
+            , calendarConfig.startEventDrag eventId mousePosition
+            )
 
         StopEventDrag eventId mousePosition ->
-            ( { model | draggingEventId = Nothing }, Cmd.none, calendarConfig.changeEventFinish eventId (dateFromMousePosition model mousePosition) )
+            ( model
+            , encodeEventIdAndMousePosition eventId mousePosition
+                |> Ports.fetchQuarterAtPosition
+            , Nothing
+            )
+
+        AttemptEventUpdateFromDrag result ->
+            case result of
+                Err error ->
+                    ( model, Cmd.none, Nothing )
+
+                Ok ( eventId, quarter ) ->
+                    case dateFromQuarter model quarter of
+                        Err _ ->
+                            ( { model | draggingEventId = Nothing }, Cmd.none, Nothing )
+
+                        Ok newFinishDate ->
+                            ( { model | draggingEventId = Nothing }
+                            , Cmd.none
+                            , calendarConfig.changeEventFinish eventId newFinishDate
+                            )
 
 
-dateFromMousePosition : Model -> Mouse.Position -> Date
-dateFromMousePosition { selectedDate } position =
+encodeEventIdAndMousePosition : String -> Mouse.Position -> String
+encodeEventIdAndMousePosition eventId mousePosition =
+    Encode.encode 0 <|
+        Encode.object
+            [ ( "eventId", Encode.string eventId )
+            , ( "x", Encode.int mousePosition.x )
+            , ( "y", Encode.int mousePosition.y )
+            ]
+
+
+dateFromQuarter : Model -> String -> Result String Date
+dateFromQuarter { selectedDate } quarter =
     let
-        newDate =
-            selectedDate
+        convert q =
+            let
+                ( hour, minute ) =
+                    ( floor fractionOfDayInHours, minutesAsFraction )
+
+                fractionOfDayInMinutes =
+                    -- N.B. +1 takes us to the 'end' of the quarter hour.
+                    (toFloat (q + 1) / quartersInDay) * minutesInDay
+
+                fractionOfDayInHours =
+                    -- The hour that this quarter represents, as a fraction. E.g. 13:30
+                    -- would be 13.5
+                    fractionOfDayInMinutes / minutesInHour
+
+                minutesAsFraction =
+                    (fmod fractionOfDayInMinutes 60) |> round
+            in
+                Date.fromParts
+                    (Date.year selectedDate)
+                    (Date.month selectedDate)
+                    (Date.day selectedDate)
+                    hour
+                    minute
+                    (Date.second selectedDate)
+                    (Date.millisecond selectedDate)
     in
-        selectedDate
+        String.toInt quarter
+            |> Result.map convert
+
+
+quartersInDay : number
+quartersInDay =
+    96
+
+
+minutesInDay : number
+minutesInDay =
+    1440
+
+
+minutesInHour : number
+minutesInHour =
+    60
 
 
 
@@ -125,9 +207,26 @@ modeButton mode =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.draggingEventId of
-        Just id ->
-            Mouse.ups (StopEventDrag id)
+    let
+        foo =
+            case model.draggingEventId of
+                Just id ->
+                    Mouse.ups (StopEventDrag id)
 
-        Nothing ->
-            Sub.none
+                Nothing ->
+                    Sub.none
+    in
+        Sub.batch
+            [ foo
+            , Ports.fetchedQuarterAtPosition <|
+                decodeFoundQuarter
+                    >> AttemptEventUpdateFromDrag
+            ]
+
+
+decodeFoundQuarter : String -> Result String ( String, String )
+decodeFoundQuarter =
+    Decode.map2 (,)
+        (Decode.field "eventId" Decode.string)
+        (Decode.field "quarter" Decode.string)
+        |> Decode.decodeString

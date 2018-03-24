@@ -16,3 +16,4 @@ type Msg
     | Next
     | StartEventDrag String Mouse.Position
     | StopEventDrag String Mouse.Position
+    | AttemptEventUpdateFromDrag (Result String ( String, String ))

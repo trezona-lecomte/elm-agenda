@@ -47,8 +47,7 @@ calendar selectedDate calendarConfig eventConfig events =
                 (viewHoursHeader :: List.map viewHour hours)
             , div [ S.class "schedule-column" ]
                 (viewScheduleHeader
-                    :: List.map viewHourInSchedule hours
-                    ++ List.map viewQuarterHourInSchedule quarterHours
+                    :: List.map viewQuarterHourInSchedule quarterHours
                     ++ List.map (viewEvent calendarConfig eventConfig) eventsOnSelectedDate
                 )
             ]
@@ -69,21 +68,27 @@ viewHour hour =
     div [ S.class "hours-item" ] [ text hour ]
 
 
-viewHourInSchedule : String -> Html Msg
-viewHourInSchedule _ =
-    div [ S.class "schedule-hour-item" ] []
-
-
 viewQuarterHourInSchedule : Int -> Html Msg
-viewQuarterHourInSchedule q =
-    div [ S.class "schedule-quarter-hour-item" ] []
+viewQuarterHourInSchedule quarter =
+    div
+        [ S.class <| "schedule-quarter-hour-item"
+        , id <| "quarter-" ++ toString quarter
+        , style
+            [ ( "grid-row", toString <| quarter + 1 )
+            , ( "grid-column", "1" )
+            ]
+        ]
+        []
 
 
 viewEvent : CalendarConfig msg -> EventConfig event -> event -> Html Msg
 viewEvent { startEventDrag } { id, start, finish, label } event =
     div
         [ S.class "schedule-event-item"
-        , style [ gridRowForEvent ( start event, finish event ) ]
+        , style
+            [ gridRowForEvent ( start event, finish event )
+            , ( "grid-column", "1" )
+            ]
         , on "mousedown" <| Json.Decode.map (StartEventDrag <| id event) Mouse.position
         ]
         [ text <| label event ]
