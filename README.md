@@ -15,6 +15,8 @@ This library has only just been born, so it's in a somewhat sophomoric state.
 * ~~Drag to extend finish time of event~~
 * ~~Drag to reschedule event~~
 * ~~Appropriate cursors for different event drag modes~~
+* Don't allow dragging the finish of an event to an earlier time than the start
+* Display: deal with overlapping events
 * Add new events (button)
 * Drag to add new events
 * Remove events
