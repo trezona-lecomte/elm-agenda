@@ -2,7 +2,7 @@ module Calendar exposing (Model, init, subscriptions, update, view)
 
 import Basics.Extra exposing (fmod)
 import Calendar.Ports as Ports
-import Calendar.Types exposing (Mode(..), Msg(..))
+import Calendar.Types exposing (Mode(..), Msg(..), DragMode(..))
 import Config exposing (CalendarConfig, EventConfig)
 import Date exposing (Date)
 import Date.Extra as Date
@@ -25,6 +25,7 @@ type alias Model =
     { activeMode : Mode
     , selectedDate : Date
     , draggingEventId : Maybe String
+    , dragMode : DragMode
     }
 
 
@@ -45,6 +46,7 @@ init mode date =
     { activeMode = mode
     , selectedDate = date
     , draggingEventId = Nothing
+    , dragMode = Move
     }
 
 
@@ -76,14 +78,21 @@ update calendarConfig eventConfig msg model =
             , Nothing
             )
 
-        StartEventDrag eventId mousePosition ->
-            ( { model | draggingEventId = Just eventId }
+        StartEventDrag mode eventId mousePosition ->
+            ( { model | draggingEventId = Just eventId, dragMode = mode }
             , Cmd.none
-            , calendarConfig.startEventDrag eventId mousePosition
+            , Nothing
+            )
+
+        DragEvent eventId mousePosition ->
+            ( model
+            , encodeEventIdAndMousePosition eventId mousePosition
+                |> Ports.fetchQuarterAtPosition
+            , Nothing
             )
 
         StopEventDrag eventId mousePosition ->
-            ( model
+            ( { model | draggingEventId = Nothing }
             , encodeEventIdAndMousePosition eventId mousePosition
                 |> Ports.fetchQuarterAtPosition
             , Nothing
@@ -97,13 +106,22 @@ update calendarConfig eventConfig msg model =
                 Ok ( eventId, quarter ) ->
                     case dateFromQuarter model quarter of
                         Err _ ->
-                            ( { model | draggingEventId = Nothing }, Cmd.none, Nothing )
+                            ( model, Cmd.none, Nothing )
 
                         Ok newFinishDate ->
-                            ( { model | draggingEventId = Nothing }
-                            , Cmd.none
-                            , calendarConfig.changeEventFinish eventId newFinishDate
-                            )
+                            let
+                                updateEvent =
+                                    case model.dragMode of
+                                        Move ->
+                                            calendarConfig.moveEvent
+
+                                        Extend ->
+                                            calendarConfig.extendEvent
+                            in
+                                ( model
+                                , Cmd.none
+                                , updateEvent eventId newFinishDate
+                                )
 
 
 encodeEventIdAndMousePosition : String -> Mouse.Position -> String
@@ -169,7 +187,7 @@ minutesInHour =
 
 
 view : CalendarConfig msg -> EventConfig event -> List event -> Model -> Html Msg
-view calendarConfig eventConfig events { activeMode, selectedDate } =
+view calendarConfig eventConfig events { activeMode, selectedDate, draggingEventId } =
     let
         ( viewControls, viewCalendar ) =
             case activeMode of
@@ -177,8 +195,16 @@ view calendarConfig eventConfig events { activeMode, selectedDate } =
                     ( View.Daily.paginationControls selectedDate ( Today, Previous, Next )
                     , View.Daily.calendar selectedDate calendarConfig eventConfig events
                     )
+
+        dragCursorStyle =
+            case draggingEventId of
+                Just id ->
+                    ( "cursor", "ns-resize" )
+
+                Nothing ->
+                    ( "", "" )
     in
-        div [ class "container" ]
+        div [ class "container", style [ dragCursorStyle ] ]
             [ div [ S.class "calendar" ]
                 [ div [ S.class "calendar-header" ]
                     [ viewModeControls
@@ -208,24 +234,25 @@ modeButton mode =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     let
-        foo =
+        ( mouseMoves, mouseUps ) =
             case model.draggingEventId of
                 Just id ->
-                    Mouse.ups (StopEventDrag id)
+                    ( Mouse.moves <| DragEvent id, Mouse.ups <| StopEventDrag id )
 
                 Nothing ->
-                    Sub.none
+                    ( Sub.none, Sub.none )
     in
         Sub.batch
-            [ foo
+            [ mouseMoves
+            , mouseUps
             , Ports.fetchedQuarterAtPosition <|
-                decodeFoundQuarter
+                decodeQuarter
                     >> AttemptEventUpdateFromDrag
             ]
 
 
-decodeFoundQuarter : String -> Result String ( String, String )
-decodeFoundQuarter =
+decodeQuarter : String -> Result String ( String, String )
+decodeQuarter =
     Decode.map2 (,)
         (Decode.field "eventId" Decode.string)
         (Decode.field "quarter" Decode.string)

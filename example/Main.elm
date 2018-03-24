@@ -73,7 +73,8 @@ type Msg
 
 
 type CalendarMsg
-    = ChangeEventFinish String Date
+    = ChangeEventStart String Date
+    | ChangeEventFinish String Date
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -98,11 +99,29 @@ update msg model =
 handleCalendarUpdate : Maybe CalendarMsg -> Model -> Model
 handleCalendarUpdate msg model =
     case msg of
+        Just (ChangeEventStart eventId newStart) ->
+            { model | events = List.map (changeEventStart eventId newStart) model.events }
+
         Just (ChangeEventFinish eventId newFinish) ->
             { model | events = List.map (changeEventFinish eventId newFinish) model.events }
 
         Nothing ->
             model
+
+
+changeEventStart : String -> Date -> Event -> Event
+changeEventStart id newDate event =
+    if event.id == id then
+        let
+            offset =
+                Date.diff Date.Minute event.start newDate
+
+            newFinish =
+                Date.add Date.Minute offset event.finish
+        in
+            { event | start = newDate, finish = newFinish }
+    else
+        event
 
 
 changeEventFinish : String -> Date -> Event -> Event
@@ -131,8 +150,8 @@ view { calendarModel, events } =
 
 calendarConfig : CalendarConfig CalendarMsg
 calendarConfig =
-    { startEventDrag = \_ _ -> Nothing
-    , changeEventFinish = \eventId newFinish -> Just <| ChangeEventFinish eventId newFinish
+    { moveEvent = \eventId newStart -> Just <| ChangeEventStart eventId newStart
+    , extendEvent = \eventId newFinish -> Just <| ChangeEventFinish eventId newFinish
     }
 
 

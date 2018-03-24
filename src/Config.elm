@@ -1,7 +1,6 @@
 module Config exposing (..)
 
 import Date exposing (Date)
-import Mouse
 
 
 type alias EventConfig event =
@@ -13,6 +12,6 @@ type alias EventConfig event =
 
 
 type alias CalendarConfig msg =
-    { startEventDrag : String -> Mouse.Position -> Maybe msg
-    , changeEventFinish : String -> Date -> Maybe msg
+    { moveEvent : String -> Date -> Maybe msg
+    , extendEvent : String -> Date -> Maybe msg
     }

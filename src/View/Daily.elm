@@ -1,36 +1,36 @@
 module View.Daily exposing (..)
 
+import Calendar.Types exposing (Msg(..), DragMode(..))
 import Config exposing (CalendarConfig, EventConfig)
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (on, onClick)
+import Html.Events exposing (on, onClick, onMouseOver)
 import Json.Decode
 import Labels
 import Mouse
 import Style as S
-import Calendar.Types exposing (Msg(..))
 
 
 paginationControls : Date -> ( Msg, Msg, Msg ) -> Html Msg
 paginationControls date ( todayMsg, prevMsg, nextMsg ) =
     div [ S.class "pagination-controls" ]
-        [ viewButton Labels.todayButton todayMsg
-        , viewButton Labels.previousPageButton prevMsg
-        , viewCurrentDate date
-        , viewButton Labels.nextPageButton nextMsg
+        [ simpleButton Labels.todayButton todayMsg
+        , simpleButton Labels.previousPageButton prevMsg
+        , currentDate date
+        , simpleButton Labels.nextPageButton nextMsg
         ]
 
 
-viewCurrentDate : Date -> Html Msg
-viewCurrentDate date =
+currentDate : Date -> Html Msg
+currentDate date =
     div [ S.class "current-date is-size-6" ]
         [ text <| Date.toFormattedString "EE MMMM d y" date ]
 
 
-viewButton : String -> Msg -> Html Msg
-viewButton label msg =
+simpleButton : String -> Msg -> Html Msg
+simpleButton label msg =
     button [ class "button", onClick msg ] [ text label ]
 
 
@@ -44,32 +44,32 @@ calendar selectedDate calendarConfig eventConfig events =
     in
         div [ S.class "day-calendar" ]
             [ div [ S.class "hours-column" ]
-                (viewHoursHeader :: List.map viewHour hours)
+                (hoursHeader :: List.map hourItem hours)
             , div [ S.class "schedule-column" ]
-                (viewScheduleHeader
-                    :: List.map viewQuarterHourInSchedule quarterHours
-                    ++ List.map (viewEvent calendarConfig eventConfig) eventsOnSelectedDate
+                (scheduleHeader
+                    :: List.map quarterHourItem quarterHours
+                    ++ List.map (eventItem calendarConfig eventConfig) eventsOnSelectedDate
                 )
             ]
 
 
-viewHoursHeader : Html Msg
-viewHoursHeader =
+hoursHeader : Html Msg
+hoursHeader =
     div [ S.class "hours-header" ] [ text "Time" ]
 
 
-viewScheduleHeader : Html Msg
-viewScheduleHeader =
+scheduleHeader : Html Msg
+scheduleHeader =
     div [ S.class "schedule-header" ] [ text "Schedule" ]
 
 
-viewHour : String -> Html Msg
-viewHour hour =
+hourItem : String -> Html Msg
+hourItem hour =
     div [ S.class "hours-item" ] [ text hour ]
 
 
-viewQuarterHourInSchedule : Int -> Html Msg
-viewQuarterHourInSchedule quarter =
+quarterHourItem : Int -> Html Msg
+quarterHourItem quarter =
     div
         [ S.class <| "schedule-quarter-hour-item"
         , id <| "quarter-" ++ toString quarter
@@ -81,17 +81,37 @@ viewQuarterHourInSchedule quarter =
         []
 
 
-viewEvent : CalendarConfig msg -> EventConfig event -> event -> Html Msg
-viewEvent { startEventDrag } { id, start, finish, label } event =
+eventItem : CalendarConfig msg -> EventConfig event -> event -> Html Msg
+eventItem _ { id, start, finish, label } event =
     div
         [ S.class "schedule-event-item"
         , style
             [ gridRowForEvent ( start event, finish event )
             , ( "grid-column", "1" )
             ]
-        , on "mousedown" <| Json.Decode.map (StartEventDrag <| id event) Mouse.position
         ]
-        [ text <| label event ]
+        [ div [ S.class "schedule-event-label" ] [ text <| label event ]
+        , eventMoveHandle <| id event
+        , eventExtendHandle <| id event
+        ]
+
+
+eventMoveHandle : String -> Html Msg
+eventMoveHandle eventId =
+    div
+        [ S.class <| "schedule-event-move-handle"
+        , on "mousedown" <| Json.Decode.map (StartEventDrag Move eventId) Mouse.position
+        ]
+        []
+
+
+eventExtendHandle : String -> Html Msg
+eventExtendHandle eventId =
+    div
+        [ S.class <| "schedule-event-extend-handle"
+        , on "mousedown" <| Json.Decode.map (StartEventDrag Extend eventId) Mouse.position
+        ]
+        []
 
 
 gridRowForEvent : ( Date, Date ) -> ( String, String )
