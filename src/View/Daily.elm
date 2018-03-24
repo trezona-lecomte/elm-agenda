@@ -1,16 +1,19 @@
 module View.Daily exposing (..)
 
-import Config exposing (EventConfig)
+import Config exposing (CalendarConfig, EventConfig)
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (on, onClick)
+import Json.Decode
 import Labels
+import Mouse
 import Style as S
+import Calendar.Types exposing (Msg(..))
 
 
-paginationControls : Date -> ( msg, msg, msg ) -> Html msg
+paginationControls : Date -> ( Msg, Msg, Msg ) -> Html Msg
 paginationControls date ( todayMsg, prevMsg, nextMsg ) =
     div [ S.class "pagination-controls" ]
         [ viewButton Labels.todayButton todayMsg
@@ -20,23 +23,23 @@ paginationControls date ( todayMsg, prevMsg, nextMsg ) =
         ]
 
 
-viewCurrentDate : Date -> Html msg
+viewCurrentDate : Date -> Html Msg
 viewCurrentDate date =
     div [ S.class "current-date is-size-6" ]
         [ text <| Date.toFormattedString "EE MMMM d y" date ]
 
 
-viewButton : String -> msg -> Html msg
+viewButton : String -> Msg -> Html Msg
 viewButton label msg =
     button [ class "button", onClick msg ] [ text label ]
 
 
-calendar : Date -> EventConfig event -> List event -> Html msg
-calendar selectedDate config events =
+calendar : Date -> CalendarConfig msg -> EventConfig event -> List event -> Html Msg
+calendar selectedDate calendarConfig eventConfig events =
     let
         eventsOnSelectedDate =
             List.filter
-                (\e -> Date.equalBy Date.Day (config.start e) selectedDate)
+                (\e -> Date.equalBy Date.Day (eventConfig.start e) selectedDate)
                 events
     in
         div [ S.class "day-calendar" ]
@@ -46,43 +49,44 @@ calendar selectedDate config events =
                 (viewScheduleHeader
                     :: List.map viewHourInSchedule hours
                     ++ List.map viewQuarterHourInSchedule quarterHours
-                    ++ List.map (viewEvent config) eventsOnSelectedDate
+                    ++ List.map (viewEvent calendarConfig eventConfig) eventsOnSelectedDate
                 )
             ]
 
 
-viewHoursHeader : Html msg
+viewHoursHeader : Html Msg
 viewHoursHeader =
     div [ S.class "hours-header" ] [ text "Time" ]
 
 
-viewScheduleHeader : Html msg
+viewScheduleHeader : Html Msg
 viewScheduleHeader =
     div [ S.class "schedule-header" ] [ text "Schedule" ]
 
 
-viewHour : String -> Html msg
+viewHour : String -> Html Msg
 viewHour hour =
     div [ S.class "hours-item" ] [ text hour ]
 
 
-viewHourInSchedule : String -> Html msg
+viewHourInSchedule : String -> Html Msg
 viewHourInSchedule _ =
     div [ S.class "schedule-hour-item" ] []
 
 
-viewQuarterHourInSchedule : Int -> Html msg
+viewQuarterHourInSchedule : Int -> Html Msg
 viewQuarterHourInSchedule q =
     div [ S.class "schedule-quarter-hour-item" ] []
 
 
-viewEvent : EventConfig event -> event -> Html msg
-viewEvent config event =
+viewEvent : CalendarConfig msg -> EventConfig event -> event -> Html Msg
+viewEvent { startEventDrag } { id, start, finish, label } event =
     div
         [ S.class "schedule-event-item"
-        , style [ gridRowForEvent ( config.start event, config.finish event ) ]
+        , style [ gridRowForEvent ( start event, finish event ) ]
+        , on "mousedown" <| Json.Decode.map (StartEventDrag <| id event) Mouse.position
         ]
-        [ text <| config.label event ]
+        [ text <| label event ]
 
 
 gridRowForEvent : ( Date, Date ) -> ( String, String )

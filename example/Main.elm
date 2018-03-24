@@ -5,7 +5,8 @@ import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (class)
 import Calendar
-import Config exposing (EventConfig)
+import Calendar.Types as Calendar
+import Config exposing (CalendarConfig, EventConfig)
 
 
 main : Program Never Model Msg
@@ -71,23 +72,45 @@ type Msg
     | SelectDate Date
 
 
+type CalendarMsg
+    = ChangeEventFinish String Date
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UpdateCalendar calendarMsg ->
             let
-                ( updatedCalendar, calendarCmd ) =
-                    Calendar.update calendarMsg model.calendarModel
+                ( updatedCalendar, calendarCmd, maybeMsg ) =
+                    Calendar.update calendarConfig eventConfig calendarMsg model.calendarModel
 
                 newModel =
                     { model | calendarModel = updatedCalendar }
             in
                 -- Wrap all calendar cmds in our Msg type so we can send
                 -- them to the Elm Runtime as if they were our own cmds.
-                newModel ! [ Cmd.map UpdateCalendar calendarCmd ]
+                handleCalendarUpdate maybeMsg newModel ! [ Cmd.map UpdateCalendar calendarCmd ]
 
         SelectDate date ->
             model ! []
+
+
+handleCalendarUpdate : Maybe CalendarMsg -> Model -> Model
+handleCalendarUpdate msg model =
+    case msg of
+        Just (ChangeEventFinish eventId newFinish) ->
+            { model | events = List.map (changeEventFinish eventId newFinish) model.events }
+
+        Nothing ->
+            model
+
+
+changeEventFinish : String -> Date -> Event -> Event
+changeEventFinish id newDate event =
+    if event.id == id then
+        { event | finish = newDate }
+    else
+        event
 
 
 
@@ -99,11 +122,18 @@ view { calendarModel, events } =
     div [ class "section" ]
         -- Wrap all msgs from the calendar view in our Msg type so we
         -- can pass them on with our own msgs to the Elm Runtime.
-        [ Html.map UpdateCalendar (Calendar.view eventConfig events calendarModel) ]
+        [ Html.map UpdateCalendar (Calendar.view calendarConfig eventConfig events calendarModel) ]
 
 
 
 -- CONFIG
+
+
+calendarConfig : CalendarConfig CalendarMsg
+calendarConfig =
+    { startEventDrag = \_ _ -> Nothing
+    , changeEventFinish = \eventId newFinish -> Just <| ChangeEventFinish eventId newFinish
+    }
 
 
 eventConfig : EventConfig Event

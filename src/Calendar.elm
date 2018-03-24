@@ -1,13 +1,15 @@
-module Calendar exposing (Mode(..), Msg, Model, init, update, view, subscriptions)
+module Calendar exposing (Model, init, update, view, subscriptions)
 
-import Config exposing (EventConfig)
+import Config exposing (CalendarConfig, EventConfig)
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Labels
+import Mouse
 import Style as S
+import Calendar.Types exposing (Mode(..), Msg(..))
 import Task
 import View.Daily
 
@@ -18,11 +20,8 @@ import View.Daily
 type alias Model =
     { activeMode : Mode
     , selectedDate : Date
+    , draggingEventId : Maybe String
     }
-
-
-type Mode
-    = Daily
 
 
 intervalForMode : Mode -> Date.Interval
@@ -41,6 +40,7 @@ init : Mode -> Date -> Model
 init mode date =
     { activeMode = mode
     , selectedDate = date
+    , draggingEventId = Nothing
     }
 
 
@@ -48,45 +48,52 @@ init mode date =
 -- UPDATE
 
 
-type Msg
-    = ChangeMode Mode
-    | SetDate Date
-    | Today
-    | Previous
-    | Next
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : CalendarConfig msg -> EventConfig event -> Msg -> Model -> ( Model, Cmd Msg, Maybe msg )
+update calendarConfig eventConfig msg model =
     case msg of
         ChangeMode mode ->
-            { model | activeMode = mode } ! []
+            ( { model | activeMode = mode }, Cmd.none, Nothing )
 
         SetDate date ->
-            { model | selectedDate = date } ! []
+            ( { model | selectedDate = date }, Cmd.none, Nothing )
 
         Today ->
-            ( model, Task.perform SetDate Date.now )
+            ( model, Task.perform SetDate Date.now, Nothing )
 
         Previous ->
-            { model | selectedDate = Date.add Date.Day -1 model.selectedDate } ! []
+            ( { model | selectedDate = Date.add Date.Day -1 model.selectedDate }, Cmd.none, Nothing )
 
         Next ->
-            { model | selectedDate = Date.add Date.Day 1 model.selectedDate } ! []
+            ( { model | selectedDate = Date.add Date.Day 1 model.selectedDate }, Cmd.none, Nothing )
+
+        StartEventDrag eventId mousePosition ->
+            ( { model | draggingEventId = Just eventId }, Cmd.none, calendarConfig.startEventDrag eventId mousePosition )
+
+        StopEventDrag eventId mousePosition ->
+            ( { model | draggingEventId = Nothing }, Cmd.none, calendarConfig.changeEventFinish eventId (dateFromMousePosition model mousePosition) )
+
+
+dateFromMousePosition : Model -> Mouse.Position -> Date
+dateFromMousePosition { selectedDate } position =
+    let
+        newDate =
+            selectedDate
+    in
+        selectedDate
 
 
 
 -- VIEW
 
 
-view : EventConfig event -> List event -> Model -> Html Msg
-view config events { activeMode, selectedDate } =
+view : CalendarConfig msg -> EventConfig event -> List event -> Model -> Html Msg
+view calendarConfig eventConfig events { activeMode, selectedDate } =
     let
         ( viewControls, viewCalendar ) =
             case activeMode of
                 Daily ->
                     ( View.Daily.paginationControls selectedDate ( Today, Previous, Next )
-                    , View.Daily.calendar selectedDate config events
+                    , View.Daily.calendar selectedDate calendarConfig eventConfig events
                     )
     in
         div [ class "container" ]
@@ -118,4 +125,9 @@ modeButton mode =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    case model.draggingEventId of
+        Just id ->
+            Mouse.ups (StopEventDrag id)
+
+        Nothing ->
+            Sub.none
