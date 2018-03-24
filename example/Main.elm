@@ -136,7 +136,7 @@ changeEventStart id newDate event =
 
 changeEventFinish : String -> Date -> Event -> Event
 changeEventFinish id newDate event =
-    if event.id == id then
+    if event.id == id && (Date.diff Date.Minute event.start newDate) > 0 then
         { event | finish = newDate }
     else
         event
