@@ -40,10 +40,12 @@ type alias Event =
 init : ( Model, Cmd Msg )
 init =
     let
+        -- TODO: Default to today's date rather than this one.
         arbitraryDate =
             Date.fromParts 2018 Date.Mar 23 10 0 0 0
 
         events =
+            -- TODO: Move fixture data to a dedicated module
             [ { id = "1"
               , start = Date.fromParts 2018 Date.Mar 23 10 0 0 0
               , finish = Date.fromParts 2018 Date.Mar 23 11 0 0 0
@@ -56,8 +58,7 @@ init =
               }
             ]
     in
-        { calendarModel =
-            Calendar.init Calendar.Daily arbitraryDate
+        { calendarModel = Calendar.init Calendar.Daily arbitraryDate
         , events = events
         }
             ! []
@@ -69,7 +70,12 @@ init =
 
 type Msg
     = UpdateCalendar Calendar.Msg
-    | SelectDate Date
+    | NoOp
+
+
+
+-- While not strictly necessary, it's nice to represent any Msg values related
+-- to the Calendar in their own type.
 
 
 type CalendarMsg
@@ -92,7 +98,7 @@ update msg model =
                 -- them to the Elm Runtime as if they were our own cmds.
                 handleCalendarUpdate maybeMsg newModel ! [ Cmd.map UpdateCalendar calendarCmd ]
 
-        SelectDate date ->
+        NoOp ->
             model ! []
 
 
@@ -107,6 +113,10 @@ handleCalendarUpdate msg model =
 
         Nothing ->
             model
+
+
+
+-- TODO: Can the event update logic live in the library somewhere?
 
 
 changeEventStart : String -> Date -> Event -> Event
@@ -145,11 +155,13 @@ view { calendarModel, events } =
 
 
 
--- CONFIG
+-- CALENDAR CONFIGURATION
 
 
 calendarConfig : CalendarConfig CalendarMsg
 calendarConfig =
+    -- CalendarConfig is where you define handler functions for the various
+    -- events that the calendar can emit.
     { moveEvent = \eventId newStart -> Just <| ChangeEventStart eventId newStart
     , extendEvent = \eventId newFinish -> Just <| ChangeEventFinish eventId newFinish
     }
@@ -157,6 +169,8 @@ calendarConfig =
 
 eventConfig : EventConfig Event
 eventConfig =
+    -- EventConfig defines functions to access the required fields of your Event
+    -- type. Normally these will be record field accessor functions.
     { id = .id
     , start = .start
     , finish = .finish
@@ -171,6 +185,7 @@ eventConfig =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
+        -- Batch together the Calendar subscriptions along with your own.
         [ Calendar.subscriptions model.calendarModel
             |> Sub.map UpdateCalendar
         ]
