@@ -107,8 +107,6 @@ TODO: Summarise design choices I'm making differently to Elm Calendar.
 * ~~Drag to extend finish time of event~~
 * ~~Drag to reschedule event~~
 * ~~Appropriate cursors for different event drag modes~~
-* ~~Don't allow dragging the finish of an event to an earlier time than the start~~
-* Fix unsafe javascript that breaks when you drag an event outside the viewport
 * Change to a `grabbing` cursor when moving or extending
 * Add new events (button)
 * Remove events

@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" type="text/css" href="main.css">
 
-    <script src="elm.js" ></script>
+    <script src="elm.js"></script>
   </head>
 
   <body>
@@ -15,30 +15,28 @@
      var app = Elm.Main.fullscreen();
 
      app.ports.fetchQuarterAtPosition.subscribe(function(eventIdAndPosition) {
-       /* TODO - HERE BE DRAGONS: Unsafe as fuck. In particular, the chain of functions
-          constructing draggedToQuarter
-        */
-
        const input = JSON.parse(eventIdAndPosition);
 
        /* TODO: OffsetX - scrollLeft? */
        const offsetY = input.y - document.documentElement.scrollTop
 
-       const draggedToQuarter =
+       const draggedToElement =
          document
            .elementsFromPoint(input.x, offsetY)
            .find(e => e.className.includes("schedule-quarter-hour-item"))
-           .id
-           .split("quarter-")[1]
 
-       app.ports.fetchedQuarterAtPosition.send(
-         JSON.stringify(
-           {
-             eventId: input.eventId,
-             quarter: draggedToQuarter
-           }
+       if (draggedToElement !== null && draggedToElement !== undefined) {
+         const quarter = draggedToElement.id.split("quarter-")[1]
+
+         app.ports.fetchedQuarterAtPosition.send(
+           JSON.stringify(
+             {
+               eventId: input.eventId,
+               quarter: quarter
+             }
+           )
          )
-       )
+       }
      });
     </script>
   </body>
