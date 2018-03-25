@@ -4,6 +4,14 @@ import Date exposing (Date)
 import Mouse
 
 
+type alias Model =
+    { activeMode : Mode
+    , selectedDate : Date
+    , draggingEventId : Maybe String
+    , dragMode : DragMode
+    }
+
+
 type Mode
     = Daily
 

@@ -1,9 +1,9 @@
-module Calendar exposing (Model, init, subscriptions, update, view)
+module Calendar exposing (init, subscriptions, update, view)
 
 import Basics.Extra exposing (fmod)
+import Calendar.Config exposing (Config, EventMapping)
 import Calendar.Ports as Ports
-import Calendar.Types exposing (Mode(..), Msg(..), DragMode(..))
-import Config exposing (CalendarConfig, EventConfig)
+import Calendar.Types exposing (DragMode(..), Mode(..), Model, Msg(..))
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
@@ -19,14 +19,6 @@ import View.Daily
 
 
 -- MODEL
-
-
-type alias Model =
-    { activeMode : Mode
-    , selectedDate : Date
-    , draggingEventId : Maybe String
-    , dragMode : DragMode
-    }
 
 
 intervalForMode : Mode -> Date.Interval
@@ -54,8 +46,8 @@ init mode date =
 -- UPDATE
 
 
-update : CalendarConfig msg -> EventConfig event -> Msg -> Model -> ( Model, Cmd Msg, Maybe msg )
-update calendarConfig eventConfig msg model =
+update : Config event msg -> Msg -> Model -> ( Model, Cmd Msg, Maybe msg )
+update config msg model =
     case msg of
         ChangeMode mode ->
             ( { model | activeMode = mode }, Cmd.none, Nothing )
@@ -116,10 +108,10 @@ update calendarConfig eventConfig msg model =
                                 updateEvent =
                                     case model.dragMode of
                                         Move ->
-                                            calendarConfig.moveEvent
+                                            config.updateEventStart
 
                                         Extend ->
-                                            calendarConfig.extendEvent
+                                            config.updateEventFinish
                             in
                                 ( model
                                 , Cmd.none
@@ -189,14 +181,14 @@ minutesInHour =
 -- VIEW
 
 
-view : Model -> CalendarConfig msg -> EventConfig event -> List event -> Model -> Html Msg
-view model calendarConfig eventConfig events { activeMode, selectedDate, draggingEventId } =
+view : Config event msg -> Model -> List event -> Html Msg
+view config ({ activeMode, draggingEventId } as model) events =
     let
         ( viewControls, viewCalendar ) =
             case activeMode of
                 Daily ->
-                    ( View.Daily.paginationControls selectedDate ( Today, Previous, Next )
-                    , View.Daily.calendar selectedDate calendarConfig eventConfig events
+                    ( View.Daily.paginationControls model ( Today, Previous, Next )
+                    , View.Daily.calendar config model events
                     )
 
         dragCursorStyle =

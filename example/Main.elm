@@ -6,7 +6,7 @@ import Html exposing (..)
 import Html.Attributes exposing (class)
 import Calendar
 import Calendar.Types as Calendar
-import Config exposing (CalendarConfig, EventConfig)
+import Calendar.Config as Calendar
 
 
 main : Program Never Model Msg
@@ -79,8 +79,8 @@ type Msg
 
 
 type CalendarMsg
-    = ChangeEventStart String Date
-    | ChangeEventFinish String Date
+    = UpdateEventStart String Date
+    | UpdateEventFinish String Date
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -89,7 +89,7 @@ update msg model =
         UpdateCalendar calendarMsg ->
             let
                 ( updatedCalendar, calendarCmd, maybeMsg ) =
-                    Calendar.update calendarConfig eventConfig calendarMsg model.calendarModel
+                    Calendar.update calendarConfig calendarMsg model.calendarModel
 
                 newModel =
                     { model | calendarModel = updatedCalendar }
@@ -105,10 +105,10 @@ update msg model =
 handleCalendarUpdate : Maybe CalendarMsg -> Model -> Model
 handleCalendarUpdate msg model =
     case msg of
-        Just (ChangeEventStart eventId newStart) ->
+        Just (UpdateEventStart eventId newStart) ->
             { model | events = List.map (changeEventStart eventId newStart) model.events }
 
-        Just (ChangeEventFinish eventId newFinish) ->
+        Just (UpdateEventFinish eventId newFinish) ->
             { model | events = List.map (changeEventFinish eventId newFinish) model.events }
 
         Nothing ->
@@ -151,30 +151,31 @@ view { calendarModel, events } =
     div [ class "section" ]
         -- Wrap all msgs from the calendar view in our Msg type so we
         -- can pass them on with our own msgs to the Elm Runtime.
-        [ Html.map UpdateCalendar (Calendar.view calendarModel calendarConfig eventConfig events calendarModel) ]
+        [ Html.map UpdateCalendar (Calendar.view calendarConfig calendarModel events) ]
 
 
 
 -- CALENDAR CONFIGURATION
 
 
-calendarConfig : CalendarConfig CalendarMsg
+calendarConfig : Calendar.Config Event CalendarMsg
 calendarConfig =
-    -- CalendarConfig is where you define handler functions for the various
-    -- events that the calendar can emit.
-    { moveEvent = \eventId newStart -> Just <| ChangeEventStart eventId newStart
-    , extendEvent = \eventId newFinish -> Just <| ChangeEventFinish eventId newFinish
-    }
+    { -- Your EventMapping defines functions to access the fields of your Event
+      -- type. Usually these will be your record field accessor functions.
+      eventMapping =
+        { id = .id
+        , start = .start
+        , finish = .finish
+        , label = .label
+        }
 
-
-eventConfig : EventConfig Event
-eventConfig =
-    -- EventConfig defines functions to access the required fields of your Event
-    -- type. Normally these will be record field accessor functions.
-    { id = .id
-    , start = .start
-    , finish = .finish
-    , label = .label
+    -- These functions let you hook into the Calendar msgs that can be emitted.
+    , updateEventStart =
+        \eventId newStart ->
+            UpdateEventStart eventId newStart |> Just
+    , updateEventFinish =
+        \eventId newFinish ->
+            UpdateEventFinish eventId newFinish |> Just
     }
 
 

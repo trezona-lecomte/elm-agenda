@@ -1,7 +1,7 @@
 module View.Daily exposing (..)
 
-import Calendar.Types exposing (Msg(..), DragMode(..))
-import Config exposing (CalendarConfig, EventConfig)
+import Calendar.Config exposing (Config, EventMapping)
+import Calendar.Types exposing (Model, Msg(..), DragMode(..))
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
@@ -13,12 +13,12 @@ import Mouse
 import Style as S
 
 
-paginationControls : Date -> ( Msg, Msg, Msg ) -> Html Msg
-paginationControls date ( todayMsg, prevMsg, nextMsg ) =
+paginationControls : Model -> ( Msg, Msg, Msg ) -> Html Msg
+paginationControls { selectedDate } ( todayMsg, prevMsg, nextMsg ) =
     div [ S.class "pagination-controls" ]
         [ simpleButton Labels.todayButton todayMsg
         , simpleButton Labels.previousPageButton prevMsg
-        , currentDate date
+        , currentDate selectedDate
         , simpleButton Labels.nextPageButton nextMsg
         ]
 
@@ -34,12 +34,12 @@ simpleButton label msg =
     button [ class "button", onClick msg ] [ text label ]
 
 
-calendar : Date -> CalendarConfig msg -> EventConfig event -> List event -> Html Msg
-calendar selectedDate calendarConfig eventConfig events =
+calendar : Config event msg -> Model -> List event -> Html Msg
+calendar { eventMapping } { selectedDate } events =
     let
         eventsOnSelectedDate =
             List.filter
-                (\e -> Date.equalBy Date.Day (eventConfig.start e) selectedDate)
+                (\e -> Date.equalBy Date.Day (eventMapping.start e) selectedDate)
                 events
     in
         div [ S.class "day-calendar" ]
@@ -48,7 +48,7 @@ calendar selectedDate calendarConfig eventConfig events =
             , div [ S.class "schedule-column" ]
                 (scheduleHeader
                     :: List.map quarterHourItem quarterHours
-                    ++ List.map (eventItem calendarConfig eventConfig) eventsOnSelectedDate
+                    ++ List.map (eventItem eventMapping) eventsOnSelectedDate
                 )
             ]
 
@@ -81,8 +81,8 @@ quarterHourItem quarter =
         []
 
 
-eventItem : CalendarConfig msg -> EventConfig event -> event -> Html Msg
-eventItem _ { id, start, finish, label } event =
+eventItem : EventMapping event -> event -> Html Msg
+eventItem { id, start, finish, label } event =
     div
         [ S.class "schedule-event-item"
         , style
