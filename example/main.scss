@@ -104,6 +104,7 @@
     grid-template-rows: 3fr 1fr;
     grid-template-columns: 1fr;
     background-color: $primary;
+    border-radius: 5px;
     z-index: 2;
     user-select: none;
     -moz-user-select: none;
@@ -113,21 +114,18 @@
 
 .elm-agenda__schedule-event-label {
     z-index: 3;
-    cursor: grab;
     grid-row: 1 / 4;
     grid-column: 1;
 }
 
 .elm-agenda__schedule-event-move-handle {
     z-index: 4;
-    cursor: grab;
     grid-row: 1 / 2;
     grid-column: 1;
 }
 
 .elm-agenda__schedule-event-extend-handle {
     z-index: 4;
-    cursor: ns-resize;
     grid-row: 2 / 3;
     grid-column: 1;
 }

@@ -36,7 +36,7 @@ simpleButton label msg =
 
 
 calendar : Config event msg -> Model -> List event -> Html Msg
-calendar { eventMapping } { activeMode, selectedDate } events =
+calendar { eventMapping } { activeMode, selectedDate, draggingEventId } events =
     let
         eventsOnSelectedDate =
             List.filter
@@ -49,7 +49,7 @@ calendar { eventMapping } { activeMode, selectedDate } events =
             , div [ S.class "schedule-column" ]
                 (scheduleHeader activeMode
                     :: List.map quarterHourItem quarterHours
-                    ++ List.map (eventItem eventMapping) eventsOnSelectedDate
+                    ++ List.map (eventItem draggingEventId eventMapping) eventsOnSelectedDate
                 )
             ]
 
@@ -82,8 +82,8 @@ quarterHourItem quarter =
         []
 
 
-eventItem : EventMapping event -> event -> Html Msg
-eventItem { id, start, finish, label } event =
+eventItem : Maybe String -> EventMapping event -> event -> Html Msg
+eventItem draggingEventId { id, start, finish, label } event =
     div
         [ S.class "schedule-event-item"
         , style
@@ -92,27 +92,47 @@ eventItem { id, start, finish, label } event =
             ]
         ]
         [ div [ S.class "schedule-event-label" ] [ text <| label event ]
-        , eventMoveHandle <| id event
-        , eventExtendHandle <| id event
+        , eventMoveHandle draggingEventId <| id event
+        , eventExtendHandle draggingEventId <| id event
         ]
 
 
-eventMoveHandle : String -> Html Msg
-eventMoveHandle eventId =
-    div
-        [ S.class <| "schedule-event-move-handle"
-        , on "mousedown" <| Json.Decode.map (StartEventDrag Move eventId) Mouse.position
-        ]
-        []
+eventMoveHandle : Maybe String -> String -> Html Msg
+eventMoveHandle draggingEventId eventId =
+    let
+        cursor =
+            case draggingEventId of
+                Just _ ->
+                    "grabbing"
+
+                Nothing ->
+                    "grab"
+    in
+        div
+            [ S.class <| "schedule-event-move-handle"
+            , style [ ( "cursor", cursor ) ]
+            , on "mousedown" <| Json.Decode.map (StartEventDrag Move eventId) Mouse.position
+            ]
+            []
 
 
-eventExtendHandle : String -> Html Msg
-eventExtendHandle eventId =
-    div
-        [ S.class <| "schedule-event-extend-handle"
-        , on "mousedown" <| Json.Decode.map (StartEventDrag Extend eventId) Mouse.position
-        ]
-        []
+eventExtendHandle : Maybe String -> String -> Html Msg
+eventExtendHandle draggingEventId eventId =
+    let
+        cursor =
+            case draggingEventId of
+                Just _ ->
+                    "grabbing"
+
+                Nothing ->
+                    "ns-resize"
+    in
+        div
+            [ S.class <| "schedule-event-extend-handle"
+            , style [ ( "cursor", cursor ) ]
+            , on "mousedown" <| Json.Decode.map (StartEventDrag Extend eventId) Mouse.position
+            ]
+            []
 
 
 

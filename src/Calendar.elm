@@ -196,7 +196,7 @@ view config ({ activeMode, draggingEventId } as model) events =
         dragCursorStyle =
             case draggingEventId of
                 Just id ->
-                    ( "cursor", "ns-resize" )
+                    ( "cursor", "grabbing" )
 
                 Nothing ->
                     ( "", "" )
