@@ -101,11 +101,14 @@ update calendarConfig eventConfig msg model =
         AttemptEventUpdateFromDrag result ->
             case result of
                 Err error ->
+                    -- TODO: Deal with errors properly
                     ( model, Cmd.none, Nothing )
 
+                -- TODO: Reduce nesting
                 Ok ( eventId, quarter ) ->
                     case dateFromQuarter model quarter of
                         Err _ ->
+                            -- TODO: Deal with errors properly
                             ( model, Cmd.none, Nothing )
 
                         Ok newFinishDate ->

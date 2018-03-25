@@ -114,6 +114,10 @@ eventExtendHandle eventId =
         []
 
 
+
+-- TODO: Test the gridRowForEvent logic!
+
+
 gridRowForEvent : ( Date, Date ) -> ( String, String )
 gridRowForEvent ( start, finish ) =
     let
