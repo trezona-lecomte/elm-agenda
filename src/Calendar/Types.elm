@@ -9,6 +9,7 @@ type alias Model =
     , selectedDate : Date
     , draggingEventId : Maybe String
     , dragMode : DragMode
+    , protoEvent : Maybe ProtoEvent
     }
 
 
@@ -21,12 +22,23 @@ type DragMode
     | Extend
 
 
+type alias ProtoEvent =
+    { start : Date
+    , finish : Date
+    , label : String
+    }
+
+
 type Msg
     = ChangeMode Mode
     | SetDate Date
     | Today
     | Previous
     | Next
+    | AddEvent
+    | InputEventLabel ProtoEvent String
+    | CloseEventForm
+    | PersistProtoEvent ProtoEvent
     | StartEventDrag DragMode String Mouse.Position
     | DragEvent String Mouse.Position
     | StopEventDrag String Mouse.Position

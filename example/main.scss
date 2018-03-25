@@ -44,10 +44,19 @@
 
 .elm-agenda__calendar-header {
     display: grid;
-    grid-template-columns: 7fr 3fr;
+    grid-template-areas: "mc ae . . . . . . pc pc";
+}
+
+.elm-agenda__mode-controls {
+    grid-area: mc;
+}
+
+.elm-agenda__add-event {
+    grid-area: ae;
 }
 
 .elm-agenda__pagination-controls {
+    grid-area: pc;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -61,7 +70,12 @@
 
 .elm-agenda__hours-column {
     display: grid;
-    grid-template-rows: 40px repeat(24, minmax(40px, 40px));
+    grid-template-rows: 80px repeat(24, minmax(80px, 80px));
+}
+
+.elm-agenda__schedule-column {
+    display: grid;
+    grid-template-rows: 80px repeat(96, minmax(20px, 20px));
 }
 
 .elm-agenda__hours-header {
@@ -71,19 +85,14 @@
     justify-content: center;
 }
 
-.elm-agenda__hours-item {
+.elm-agenda__schedule-header {
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
     justify-content: center;
 }
 
-.elm-agenda__schedule-column {
-    display: grid;
-    grid-template-rows: 40px repeat(96, minmax(10px, 10px)); // 0.0625
-}
-
-.elm-agenda__schedule-header {
+.elm-agenda__hours-item {
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
@@ -104,7 +113,8 @@
     grid-template-rows: 3fr 1fr;
     grid-template-columns: 1fr;
     background-color: $primary;
-    border-radius: 5px;
+    border-radius: 2px;
+    padding: 1px;
     z-index: 2;
     user-select: none;
     -moz-user-select: none;
@@ -113,9 +123,18 @@
 }
 
 .elm-agenda__schedule-event-label {
+    display: flex;
+    flex-flow: column wrap;
     z-index: 3;
     grid-row: 1 / 4;
     grid-column: 1;
+}
+
+.elm-agenda__schedule-event-label-text {
+}
+
+.elm-agenda__schedule-event-time {
+    flex-grow: 2;
 }
 
 .elm-agenda__schedule-event-move-handle {

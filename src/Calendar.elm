@@ -3,12 +3,12 @@ module Calendar exposing (init, subscriptions, update, view)
 import Basics.Extra exposing (fmod)
 import Calendar.Config exposing (Config, EventMapping)
 import Calendar.Ports as Ports
-import Calendar.Types exposing (DragMode(..), Mode(..), Model, Msg(..))
+import Calendar.Types exposing (..)
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Labels
@@ -39,6 +39,7 @@ init mode =
       , selectedDate = Date.fromParts 1970 Date.Jan 1 0 0 0 0
       , draggingEventId = Nothing
       , dragMode = Move
+      , protoEvent = Nothing
       }
     , Task.perform SetDate Date.now
     )
@@ -70,6 +71,39 @@ update config msg model =
             ( { model | selectedDate = Date.add Date.Day 1 model.selectedDate }
             , Cmd.none
             , Nothing
+            )
+
+        AddEvent ->
+            let
+                protoEvent =
+                    { start = model.selectedDate
+                    , finish = model.selectedDate
+                    , label = ""
+                    }
+            in
+                ( { model | protoEvent = Just <| protoEvent }
+                , Cmd.none
+                , Nothing
+                )
+
+        InputEventLabel proto label ->
+            let
+                updatedEvent =
+                    { label = label, start = proto.start, finish = proto.finish }
+            in
+                ( { model | protoEvent = Just updatedEvent }, Cmd.none, Nothing )
+
+        CloseEventForm ->
+            ( { model | protoEvent = Nothing }, Cmd.none, Nothing )
+
+        PersistProtoEvent proto ->
+            ( { model | protoEvent = Nothing }
+            , Cmd.none
+            , config.createEvent
+                { start = proto.start
+                , finish = proto.finish
+                , label = proto.label
+                }
             )
 
         StartEventDrag mode eventId mousePosition ->
@@ -205,9 +239,11 @@ view config ({ activeMode, draggingEventId } as model) events =
             [ div [ S.class "calendar" ]
                 [ div [ S.class "calendar-header" ]
                     [ viewModeControls
+                    , viewAddEventButton
                     , viewControls
                     ]
                 , viewCalendar
+                , viewEventForm model
                 ]
             ]
 
@@ -222,6 +258,64 @@ modeButton : Mode -> Html Msg
 modeButton mode =
     button [ class "button", onClick (ChangeMode mode) ]
         [ text <| Labels.changeModeButton mode ]
+
+
+viewAddEventButton : Html Msg
+viewAddEventButton =
+    div [ S.class "add-event" ]
+        [ button [ class "button", onClick AddEvent ]
+            [ text <| Labels.addEventButton ]
+        ]
+
+
+viewEventForm : Model -> Html Msg
+viewEventForm model =
+    case model.protoEvent of
+        Just event ->
+            div
+                [ class "modal is-active" ]
+                [ div [ class "modal-background" ]
+                    []
+                , div [ class "modal-card" ]
+                    [ header [ class "modal-card-head" ]
+                        [ p [ class "modal-card-title" ]
+                            [ text "Modal title" ]
+                        , button [ class "delete", onClick CloseEventForm ]
+                            []
+                        ]
+                    , section [ class "modal-card-body" ]
+                        [ Html.form []
+                            [ div [ class "field" ]
+                                [ label [ class "label" ] [ text "Event Name" ]
+                                , div [ class "control" ]
+                                    [ input
+                                        [ class "input"
+                                        , type_ "text"
+                                        , placeholder "Text input"
+                                        , onInput <| InputEventLabel event
+                                        ]
+                                        []
+                                    ]
+                                ]
+                            ]
+                        ]
+                    , footer [ class "modal-card-foot" ]
+                        [ button
+                            [ class "button is-success"
+                            , onClick <| PersistProtoEvent event
+                            ]
+                            [ text "Save" ]
+                        , button
+                            [ class "button"
+                            , onClick CloseEventForm
+                            ]
+                            [ text "Cancel" ]
+                        ]
+                    ]
+                ]
+
+        Nothing ->
+            div [ class "modal" ] []
 
 
 

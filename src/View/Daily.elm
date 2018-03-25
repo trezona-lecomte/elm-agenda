@@ -84,17 +84,40 @@ quarterHourItem quarter =
 
 eventItem : Maybe String -> EventMapping event -> event -> Html Msg
 eventItem draggingEventId { id, start, finish, label } event =
-    div
-        [ S.class "schedule-event-item"
-        , style
-            [ gridRowForEvent ( start event, finish event )
-            , ( "grid-column", "1" )
+    let
+        shadowIfInteracting =
+            case draggingEventId of
+                Just _ ->
+                    ( "box-shadow", "2px 2px 1px 1px rgb(200, 200, 200)" )
+
+                Nothing ->
+                    ( "", "" )
+    in
+        div
+            [ S.class "schedule-event-item"
+            , style
+                [ gridRowForEvent ( start event, finish event )
+                , ( "grid-column", "1" )
+                , shadowIfInteracting
+                ]
             ]
-        ]
-        [ div [ S.class "schedule-event-label" ] [ text <| label event ]
-        , eventMoveHandle draggingEventId <| id event
-        , eventExtendHandle draggingEventId <| id event
-        ]
+            [ div [ S.class "schedule-event-label is-size-7" ]
+                [ div [ S.class "schedule-event-label-text" ] [ text <| label event ]
+                , div [ S.class "schedule-event-time" ]
+                    [ text <|
+                        String.join
+                            " - "
+                            (List.map toShortTime [ start event, finish event ])
+                    ]
+                ]
+            , eventMoveHandle draggingEventId <| id event
+            , eventExtendHandle draggingEventId <| id event
+            ]
+
+
+toShortTime : Date -> String
+toShortTime =
+    Date.toFormattedString "h:mm a"
 
 
 eventMoveHandle : Maybe String -> String -> Html Msg

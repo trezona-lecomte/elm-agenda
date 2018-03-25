@@ -4,7 +4,8 @@ import Date exposing (Date)
 
 
 type alias Config event msg =
-    { updateEventStart : String -> Date -> Maybe msg
+    { createEvent : { start : Date, finish : Date, label : String } -> Maybe msg
+    , updateEventStart : String -> Date -> Maybe msg
     , updateEventFinish : String -> Date -> Maybe msg
     , eventMapping : EventMapping event
     }

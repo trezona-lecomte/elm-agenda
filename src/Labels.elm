@@ -19,3 +19,8 @@ nextPageButton =
 changeModeButton : a -> String
 changeModeButton a =
     toString a
+
+
+addEventButton : String
+addEventButton =
+    "Add Event"

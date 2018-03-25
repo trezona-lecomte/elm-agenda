@@ -1,12 +1,13 @@
 module Main exposing (main)
 
+import Calendar
+import Calendar.Types as Calendar
+import Calendar.Config as Calendar
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (class)
-import Calendar
-import Calendar.Types as Calendar
-import Calendar.Config as Calendar
+import Result.Extra as Result
 
 
 main : Program Never Model Msg
@@ -26,6 +27,7 @@ main =
 type alias Model =
     { calendarModel : Calendar.Model
     , events : List Event
+    , errors : List String
     }
 
 
@@ -44,21 +46,24 @@ init =
             Calendar.init Calendar.Daily
 
         events =
-            -- TODO: Move fixture data to a dedicated module
-            [ { id = "1"
-              , start = Date.fromParts 2018 Date.Mar 26 8 0 0 0
-              , finish = Date.fromParts 2018 Date.Mar 26 9 45 0 0
-              , label = "Abstract out some crisp encapsulations"
-              }
-            , { id = "2"
-              , start = Date.fromParts 2018 Date.Mar 26 11 30 0 0
-              , finish = Date.fromParts 2018 Date.Mar 26 12 0 0 0
-              , label = "Yell at fools on the internet"
-              }
-            ]
+            []
+
+        -- TODO: Move fixture data to a dedicated module
+        -- [ { id = "1"
+        --   , start = Date.fromParts 2018 Date.Mar 26 8 0 0 0
+        --   , finish = Date.fromParts 2018 Date.Mar 26 9 45 0 0
+        --   , label = "Abstract out some crisp encapsulations"
+        --   }
+        -- , { id = "2"
+        --   , start = Date.fromParts 2018 Date.Mar 26 11 30 0 0
+        --   , finish = Date.fromParts 2018 Date.Mar 26 12 0 0 0
+        --   , label = "Yell at fools on the internet"
+        --   }
+        -- ]
     in
         { calendarModel = calendarModel
         , events = events
+        , errors = []
         }
             ! [ Cmd.map UpdateCalendar calendarCmd ]
 
@@ -78,7 +83,8 @@ type Msg
 
 
 type CalendarMsg
-    = UpdateEventStart String Date
+    = CreateEvent { start : Date, finish : Date, label : String }
+    | UpdateEventStart String Date
     | UpdateEventFinish String Date
 
 
@@ -104,6 +110,14 @@ update msg model =
 handleCalendarUpdate : Maybe CalendarMsg -> Model -> Model
 handleCalendarUpdate msg model =
     case msg of
+        Just (CreateEvent protoEvent) ->
+            case createEvent model protoEvent of
+                Ok event ->
+                    { model | events = event :: model.events }
+
+                Err error ->
+                    { model | errors = error :: model.errors }
+
         Just (UpdateEventStart eventId newStart) ->
             { model | events = List.map (changeEventStart eventId newStart) model.events }
 
@@ -112,6 +126,25 @@ handleCalendarUpdate msg model =
 
         Nothing ->
             model
+
+
+createEvent : Model -> { start : Date, finish : Date, label : String } -> Result String Event
+createEvent model { start, finish, label } =
+    List.map (\e -> String.toInt e.id) model.events
+        |> Result.combine
+        |> Result.andThen (List.maximum >> Result.fromMaybe "")
+        |> Result.withDefault 0
+        |> validateEvent start finish label
+
+
+validateEvent : Date -> Date -> String -> Int -> Result String Event
+validateEvent start finish label id =
+    Ok
+        { id = toString id
+        , start = start
+        , finish = finish
+        , label = label
+        }
 
 
 
@@ -167,6 +200,9 @@ calendarConfig =
         , finish = .finish
         , label = .label
         }
+    , createEvent =
+        \protoEvent ->
+            CreateEvent protoEvent |> Just
 
     -- These functions let you hook into the Calendar msgs that can be emitted.
     , updateEventStart =
