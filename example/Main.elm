@@ -151,7 +151,7 @@ view { calendarModel, events } =
     div [ class "section" ]
         -- Wrap all msgs from the calendar view in our Msg type so we
         -- can pass them on with our own msgs to the Elm Runtime.
-        [ Html.map UpdateCalendar (Calendar.view calendarConfig eventConfig events calendarModel) ]
+        [ Html.map UpdateCalendar (Calendar.view calendarModel calendarConfig eventConfig events calendarModel) ]
 
 
 

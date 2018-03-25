@@ -189,8 +189,8 @@ minutesInHour =
 -- VIEW
 
 
-view : CalendarConfig msg -> EventConfig event -> List event -> Model -> Html Msg
-view calendarConfig eventConfig events { activeMode, selectedDate, draggingEventId } =
+view : Model -> CalendarConfig msg -> EventConfig event -> List event -> Model -> Html Msg
+view model calendarConfig eventConfig events { activeMode, selectedDate, draggingEventId } =
     let
         ( viewControls, viewCalendar ) =
             case activeMode of
