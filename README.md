@@ -136,7 +136,6 @@ Not yet started.
 
 ### Library
 
- * Tests
  * Untangle msg/Msg mess
  * Impose some semblence of sanity on the module structure
  * Tinker with various options for exposing configuration

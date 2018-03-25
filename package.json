@@ -1,0 +1,27 @@
+{
+  "name": "elm-agenda",
+  "version": "0.0.1",
+  "description": "Elm interactive calendar library",
+  "main": "elm.js",
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cypress:open": "cypress open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trezona-lecomte/elm-agenda.git"
+  },
+  "author": "Kieran Trezona-le Comte",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/trezona-lecomte/elm-agenda/issues"
+  },
+  "homepage": "https://github.com/trezona-lecomte/elm-agenda#readme",
+  "devDependencies": {
+    "cypress": "^2.1.0"
+  }
+}
