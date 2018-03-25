@@ -33,13 +33,15 @@ modes =
     [ Daily ]
 
 
-init : Mode -> Date -> Model
-init mode date =
-    { activeMode = mode
-    , selectedDate = date
-    , draggingEventId = Nothing
-    , dragMode = Move
-    }
+init : Mode -> ( Model, Cmd Msg )
+init mode =
+    ( { activeMode = mode
+      , selectedDate = Date.fromParts 1970 Date.Jan 1 0 0 0 0
+      , draggingEventId = Nothing
+      , dragMode = Move
+      }
+    , Task.perform SetDate Date.now
+    )
 
 
 

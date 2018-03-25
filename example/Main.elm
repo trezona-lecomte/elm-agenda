@@ -40,9 +40,8 @@ type alias Event =
 init : ( Model, Cmd Msg )
 init =
     let
-        -- TODO: Default to today's date rather than this one.
-        arbitraryDate =
-            Date.fromParts 2018 Date.Mar 23 10 0 0 0
+        ( calendarModel, calendarCmd ) =
+            Calendar.init Calendar.Daily
 
         events =
             -- TODO: Move fixture data to a dedicated module
@@ -58,10 +57,10 @@ init =
               }
             ]
     in
-        { calendarModel = Calendar.init Calendar.Daily arbitraryDate
+        { calendarModel = calendarModel
         , events = events
         }
-            ! []
+            ! [ Cmd.map UpdateCalendar calendarCmd ]
 
 
 

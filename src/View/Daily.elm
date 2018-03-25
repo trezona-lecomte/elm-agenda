@@ -1,7 +1,7 @@
 module View.Daily exposing (..)
 
 import Calendar.Config exposing (Config, EventMapping)
-import Calendar.Types exposing (Model, Msg(..), DragMode(..))
+import Calendar.Types exposing (Model, Mode, Msg(..), DragMode(..))
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
@@ -25,8 +25,9 @@ paginationControls { selectedDate } ( todayMsg, prevMsg, nextMsg ) =
 
 currentDate : Date -> Html Msg
 currentDate date =
-    div [ S.class "current-date is-size-6" ]
-        [ text <| Date.toFormattedString "EE MMMM d y" date ]
+    div
+        [ S.class "current-date is-size-6" ]
+        [ text <| Date.toFormattedString "EE MMM d y" date ]
 
 
 simpleButton : String -> Msg -> Html Msg
@@ -35,7 +36,7 @@ simpleButton label msg =
 
 
 calendar : Config event msg -> Model -> List event -> Html Msg
-calendar { eventMapping } { selectedDate } events =
+calendar { eventMapping } { activeMode, selectedDate } events =
     let
         eventsOnSelectedDate =
             List.filter
@@ -46,7 +47,7 @@ calendar { eventMapping } { selectedDate } events =
             [ div [ S.class "hours-column" ]
                 (hoursHeader :: List.map hourItem hours)
             , div [ S.class "schedule-column" ]
-                (scheduleHeader
+                (scheduleHeader activeMode
                     :: List.map quarterHourItem quarterHours
                     ++ List.map (eventItem eventMapping) eventsOnSelectedDate
                 )
@@ -58,9 +59,9 @@ hoursHeader =
     div [ S.class "hours-header" ] [ text "Time" ]
 
 
-scheduleHeader : Html Msg
-scheduleHeader =
-    div [ S.class "schedule-header" ] [ text "Schedule" ]
+scheduleHeader : Mode -> Html Msg
+scheduleHeader mode =
+    div [ S.class "schedule-header" ] [ text <| toString mode ++ " Schedule" ]
 
 
 hourItem : String -> Html Msg

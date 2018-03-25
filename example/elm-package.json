@@ -4,7 +4,8 @@
     "repository": "https://github.com/trezona-lecomte/elm-agenda.git",
     "license": "MIT",
     "source-directories": [
-        ".",
+      ".",
+      "../src"
     ],
     "exposed-modules": [],
     "dependencies": {
