@@ -32,6 +32,4 @@ describe('Navigation', function() {
       cy.contains(today.toDateString());
     });
   });
-  // cy.url().should('include', '/commands/actions')
-  // expect(true).to.equal(true);
 });
