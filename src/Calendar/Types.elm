@@ -18,7 +18,8 @@ type Mode
 
 
 type DragMode
-    = Move
+    = Create
+    | Move
     | Extend
 
 
