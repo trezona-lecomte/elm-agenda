@@ -46,14 +46,15 @@ init =
             Calendar.init Calendar.Daily
 
         events =
-            []
+            -- []
+            -- TODO: Move fixture data to a dedicated module
+            [ { id = "1"
+              , start = Date.fromParts 2018 Date.Mar 27 1 0 0 0
+              , finish = Date.fromParts 2018 Date.Mar 27 1 45 0 0
+              , label = "Abstract out some crisp encapsulations"
+              }
+            ]
 
-        -- TODO: Move fixture data to a dedicated module
-        -- [ { id = "1"
-        --   , start = Date.fromParts 2018 Date.Mar 26 8 0 0 0
-        --   , finish = Date.fromParts 2018 Date.Mar 26 9 45 0 0
-        --   , label = "Abstract out some crisp encapsulations"
-        --   }
         -- , { id = "2"
         --   , start = Date.fromParts 2018 Date.Mar 26 11 30 0 0
         --   , finish = Date.fromParts 2018 Date.Mar 26 12 0 0 0

@@ -110,13 +110,11 @@ eventItem draggingEventId { id, start, finish, label } event =
                             " - "
                             (List.map toShortTime [ start event, finish event ])
                     ]
-                , div [ S.class "schedule-event-remove-button" ]
-                    -- [ -- button
-                    --   --   [ class "button is-primary is-small"
-                    --     -- ,
-                    [ a [ class "schedule-event-remove-link icon is-small", onClick <| RemoveEvent <| id event ]
-                        [ i [ class "fas fa-times" ] [] ]
+                , button
+                    [ S.class "schedule-event-remove-link icon is-small"
+                    , onClick <| RemoveEvent <| id event
                     ]
+                    [ i [ class "fas fa-times" ] [] ]
                 ]
             , eventMoveHandle draggingEventId <| id event
             , eventExtendHandle draggingEventId <| id event
