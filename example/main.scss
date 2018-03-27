@@ -122,22 +122,30 @@
     z-index: 2;
 }
 
-.elm-agenda__schedule-event-label {
+.elm-agenda__schedule-event-content {
     display: flex;
     flex-flow: column wrap;
     grid-row: 1 / 4;
     grid-column: 1;
 }
 
-.elm-agenda__schedule-event-label-text {
+.elm-agenda__schedule-event-summary {
 }
 
 .elm-agenda__schedule-event-time {
-    flex-grow: 2;
+    flex-grow: 1;
+}
+
+.elm-agenda__schedule-event-remove-button {
+    margin-left: auto;
+    z-index: 4;
+}
+
+.schedule-event-remove-link {
+    color: $primary-invert;
 }
 
 .elm-agenda__schedule-event-move-handle {
-    z-index: 4;
     grid-row: 1 / 2;
     grid-column: 1;
     z-index: 3;

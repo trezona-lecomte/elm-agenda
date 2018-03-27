@@ -101,8 +101,9 @@ eventItem draggingEventId { id, start, finish, label } event =
                 , shadowIfInteracting
                 ]
             ]
-            [ div [ S.class "schedule-event-label is-size-7" ]
-                [ div [ S.class "schedule-event-label-text" ] [ text <| label event ]
+            -- TODO: Gracefully handle a very long event name.
+            [ div [ S.class "schedule-event-content is-size-7" ]
+                [ div [ S.class "schedule-event-summary" ] [ text <| label event ]
                 , div [ S.class "schedule-event-time" ]
                     [ text <|
                         String.join
@@ -110,7 +111,11 @@ eventItem draggingEventId { id, start, finish, label } event =
                             (List.map toShortTime [ start event, finish event ])
                     ]
                 , div [ S.class "schedule-event-remove-button" ]
-                    [ button [ onClick <| RemoveEvent <| id event ] [ text "X" ]
+                    -- [ -- button
+                    --   --   [ class "button is-primary is-small"
+                    --     -- ,
+                    [ a [ class "schedule-event-remove-link icon is-small", onClick <| RemoveEvent <| id event ]
+                        [ i [ class "fas fa-times" ] [] ]
                     ]
                 ]
             , eventMoveHandle draggingEventId <| id event
