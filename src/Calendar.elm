@@ -75,9 +75,22 @@ update config msg model =
 
         AddEvent ->
             let
+                defaultStart =
+                    Date.fromParts
+                        (Date.year model.selectedDate)
+                        (Date.month model.selectedDate)
+                        (Date.day model.selectedDate)
+                        8
+                        0
+                        0
+                        0
+
+                defaultFinish =
+                    Date.add Date.Minute 15 defaultStart
+
                 protoEvent =
-                    { start = model.selectedDate
-                    , finish = model.selectedDate
+                    { start = defaultStart
+                    , finish = defaultFinish
                     , label = ""
                     }
             in
