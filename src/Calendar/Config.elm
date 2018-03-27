@@ -7,6 +7,7 @@ type alias Config event msg =
     { createEvent : { start : Date, finish : Date, label : String } -> Maybe msg
     , updateEventStart : String -> Date -> Maybe msg
     , updateEventFinish : String -> Date -> Maybe msg
+    , removeEvent : String -> Maybe msg
     , eventMapping : EventMapping event
     }
 

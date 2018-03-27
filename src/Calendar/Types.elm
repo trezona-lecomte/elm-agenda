@@ -43,3 +43,4 @@ type Msg
     | DragEvent String Mouse.Position
     | StopEventDrag String Mouse.Position
     | AttemptEventUpdateFromDrag (Result String ( String, String ))
+    | RemoveEvent String

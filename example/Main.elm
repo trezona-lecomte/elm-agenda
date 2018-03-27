@@ -86,6 +86,7 @@ type CalendarMsg
     = CreateEvent { start : Date, finish : Date, label : String }
     | UpdateEventStart String Date
     | UpdateEventFinish String Date
+    | RemoveEvent String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -123,6 +124,9 @@ handleCalendarUpdate msg model =
 
         Just (UpdateEventFinish eventId newFinish) ->
             { model | events = List.map (changeEventFinish eventId newFinish) model.events }
+
+        Just (RemoveEvent eventId) ->
+            { model | events = List.filter (\e -> e.id /= eventId) model.events }
 
         Nothing ->
             model
@@ -211,6 +215,9 @@ calendarConfig =
     , updateEventFinish =
         \eventId newFinish ->
             UpdateEventFinish eventId newFinish |> Just
+    , removeEvent =
+        \eventId ->
+            RemoveEvent eventId |> Just
     }
 
 

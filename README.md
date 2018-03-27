@@ -109,9 +109,10 @@ TODO: Summarise design choices I'm making differently to Elm Calendar.
 * ~~Appropriate cursors for different event drag modes~~
 * ~~Change to a grabbing cursor when moving or extending~~
 * ~~Add new events (button)~~
-* Remove events
+* ~~Remove events~~
 * Display: deal with overlapping events
 * Drag to add new events
+* Remove event confirmation
 
 
 ### Weekly Mode

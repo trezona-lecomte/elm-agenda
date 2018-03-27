@@ -109,6 +109,9 @@ eventItem draggingEventId { id, start, finish, label } event =
                             " - "
                             (List.map toShortTime [ start event, finish event ])
                     ]
+                , div [ S.class "schedule-event-remove-button" ]
+                    [ button [ onClick <| RemoveEvent <| id event ] [ text "X" ]
+                    ]
                 ]
             , eventMoveHandle draggingEventId <| id event
             , eventExtendHandle draggingEventId <| id event

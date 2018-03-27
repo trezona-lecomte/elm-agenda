@@ -167,6 +167,9 @@ update config msg model =
                                 , updateEvent eventId newFinishDate
                                 )
 
+        RemoveEvent eventId ->
+            ( model, Cmd.none, config.removeEvent eventId )
+
 
 encodeEventIdAndMousePosition : String -> Mouse.Position -> String
 encodeEventIdAndMousePosition eventId mousePosition =
