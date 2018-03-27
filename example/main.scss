@@ -115,17 +115,16 @@
     background-color: $primary;
     border-radius: 2px;
     padding: 1px;
-    z-index: 2;
     user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
+    z-index: 2;
 }
 
 .elm-agenda__schedule-event-label {
     display: flex;
     flex-flow: column wrap;
-    z-index: 3;
     grid-row: 1 / 4;
     grid-column: 1;
 }
@@ -141,12 +140,13 @@
     z-index: 4;
     grid-row: 1 / 2;
     grid-column: 1;
+    z-index: 3;
 }
 
 .elm-agenda__schedule-event-extend-handle {
-    z-index: 4;
     grid-row: 2 / 3;
     grid-column: 1;
+    z-index: 3;
 }
 
 // 6. Import the rest of Bulma
