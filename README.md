@@ -107,8 +107,8 @@ TODO: Summarise design choices I'm making differently to Elm Calendar.
 * ~~Drag to extend finish time of event~~
 * ~~Drag to reschedule event~~
 * ~~Appropriate cursors for different event drag modes~~
-* Change to a `grabbing` cursor when moving or extending
-* Add new events (button)
+* ~~Change to a grabbing cursor when moving or extending~~
+* ~~Add new events (button)~~
 * Remove events
 * Display: deal with overlapping events
 * Drag to add new events
