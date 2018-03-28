@@ -150,6 +150,10 @@ update config msg model =
                             ( model, Cmd.none, Nothing )
 
                         Ok newDate ->
+                            -- TODO: This is potentially buggy, because Ports
+                            -- are async so the dragMode could have
+                            -- changed from what it was when we sent the
+                            -- original request to the Port.
                             case model.dragMode of
                                 Create ->
                                     let
