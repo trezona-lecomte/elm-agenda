@@ -84,9 +84,9 @@ type Msg
 
 
 type CalendarMsg
-    = CreateEvent { start : Date, finish : Date, label : String }
-    | UpdateEventStart String Date
-    | UpdateEventFinish String Date
+    = CreateEvent Calendar.ProtoEvent
+    | UpdateEventStart Calendar.ProtoEvent
+    | UpdateEventFinish Calendar.ProtoEvent
     | RemoveEvent String
 
 
@@ -120,11 +120,11 @@ handleCalendarUpdate msg model =
                 Err error ->
                     { model | errors = error :: model.errors }
 
-        Just (UpdateEventStart eventId newStart) ->
-            { model | events = List.map (changeEventStart eventId newStart) model.events }
+        Just (UpdateEventStart protoEvent) ->
+            { model | events = List.map (changeEventStart protoEvent) model.events }
 
-        Just (UpdateEventFinish eventId newFinish) ->
-            { model | events = List.map (changeEventFinish eventId newFinish) model.events }
+        Just (UpdateEventFinish protoEvent) ->
+            { model | events = List.map (changeEventFinish protoEvent) model.events }
 
         Just (RemoveEvent eventId) ->
             { model | events = List.filter (\e -> e.id /= eventId) model.events }
@@ -133,7 +133,7 @@ handleCalendarUpdate msg model =
             model
 
 
-createEvent : Model -> { start : Date, finish : Date, label : String } -> Result String Event
+createEvent : Model -> Calendar.ProtoEvent -> Result String Event
 createEvent model { start, finish, label } =
     List.map (\e -> String.toInt e.id) model.events
         |> Result.combine
@@ -156,27 +156,37 @@ validateEvent start finish label id =
 -- TODO: Can the event update logic live in the library somewhere?
 
 
-changeEventStart : String -> Date -> Event -> Event
-changeEventStart id newDate event =
-    if event.id == id then
-        let
-            offset =
-                Date.diff Date.Minute event.start newDate
+changeEventStart : Calendar.ProtoEvent -> Event -> Event
+changeEventStart { id, start, finish, label } event =
+    case id of
+        Just eventId ->
+            if event.id == eventId then
+                let
+                    offset =
+                        Date.diff Date.Minute event.start start
 
-            newFinish =
-                Date.add Date.Minute offset event.finish
-        in
-            { event | start = newDate, finish = newFinish }
-    else
-        event
+                    newFinish =
+                        Date.add Date.Minute offset event.finish
+                in
+                    { event | start = start, finish = newFinish }
+            else
+                event
+
+        Nothing ->
+            event
 
 
-changeEventFinish : String -> Date -> Event -> Event
-changeEventFinish id newDate event =
-    if event.id == id && (Date.diff Date.Minute event.start newDate) > 0 then
-        { event | finish = newDate }
-    else
-        event
+changeEventFinish : Calendar.ProtoEvent -> Event -> Event
+changeEventFinish { id, start, finish, label } event =
+    case id of
+        Just eventId ->
+            if event.id == eventId && (Date.diff Date.Minute event.start finish) > 0 then
+                { event | finish = finish }
+            else
+                event
+
+        Nothing ->
+            event
 
 
 
@@ -211,11 +221,11 @@ calendarConfig =
 
     -- These functions let you hook into the Calendar msgs that can be emitted.
     , updateEventStart =
-        \eventId newStart ->
-            UpdateEventStart eventId newStart |> Just
+        \protoEvent ->
+            UpdateEventStart protoEvent |> Just
     , updateEventFinish =
-        \eventId newFinish ->
-            UpdateEventFinish eventId newFinish |> Just
+        \protoEvent ->
+            UpdateEventFinish protoEvent |> Just
     , removeEvent =
         \eventId ->
             RemoveEvent eventId |> Just

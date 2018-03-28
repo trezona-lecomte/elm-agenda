@@ -18,8 +18,8 @@
     <script>
      var app = Elm.Main.fullscreen();
 
-     app.ports.fetchQuarterAtPosition.subscribe(function(eventIdAndPosition) {
-       const input = JSON.parse(eventIdAndPosition);
+     app.ports.fetchQuarterAtPosition.subscribe(function(protoEventAndPosition) {
+       const input = JSON.parse(protoEventAndPosition);
 
        /* TODO: OffsetX - scrollLeft? */
        const offsetY = input.y - document.documentElement.scrollTop
@@ -35,7 +35,12 @@
          app.ports.fetchedQuarterAtPosition.send(
            JSON.stringify(
              {
-               eventId: input.eventId,
+               event: {
+                 eventId: input.event.eventId,
+                 start: input.event.start,
+                 finish: input.event.finish,
+                 label: input.event.label
+               },
                quarter: quarter
              }
            )

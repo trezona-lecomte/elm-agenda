@@ -8,7 +8,7 @@ import Mouse
 type alias Model =
     { activeMode : Mode
     , selectedDate : Date
-    , draggingEventId : Maybe String
+    , draggingProtoEvent : Maybe ProtoEvent
     , dragMode : DragMode
     , protoEvent : ProtoEvent
     , eventFormActive : Bool
@@ -26,7 +26,8 @@ type DragMode
 
 
 type alias ProtoEvent =
-    { start : Date
+    { id : Maybe String
+    , start : Date
     , finish : Date
     , label : String
     }
@@ -48,7 +49,8 @@ initProtoEvent date =
         defaultFinish =
             Date.add Date.Minute 15 defaultStart
     in
-        { start = defaultStart
+        { id = Nothing
+        , start = defaultStart
         , finish = defaultFinish
         , label = ""
         }
@@ -64,8 +66,8 @@ type Msg
     | InputEventLabel ProtoEvent String
     | CloseEventForm
     | PersistProtoEvent ProtoEvent
-    | StartEventDrag DragMode String Mouse.Position
-    | DragEvent String Mouse.Position
-    | StopEventDrag String Mouse.Position
-    | AttemptEventUpdateFromDrag (Result String ( String, String ))
+    | StartEventDrag DragMode ProtoEvent Mouse.Position
+    | DragEvent ProtoEvent Mouse.Position
+    | StopEventDrag ProtoEvent Mouse.Position
+    | AttemptEventUpdateFromDrag (Result String ( ProtoEvent, String ))
     | RemoveEvent String

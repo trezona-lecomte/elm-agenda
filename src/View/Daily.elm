@@ -1,7 +1,7 @@
 module View.Daily exposing (..)
 
 import Calendar.Config exposing (Config, EventMapping)
-import Calendar.Types exposing (Model, Mode, Msg(..), DragMode(..))
+import Calendar.Types exposing (..)
 import Date exposing (Date)
 import Date.Extra as Date
 import Html exposing (..)
@@ -36,7 +36,7 @@ simpleButton label msg =
 
 
 calendar : Config event msg -> Model -> List event -> Html Msg
-calendar { eventMapping } { activeMode, selectedDate, draggingEventId } events =
+calendar { eventMapping } { activeMode, selectedDate, draggingProtoEvent } events =
     let
         eventsOnSelectedDate =
             List.filter
@@ -49,7 +49,7 @@ calendar { eventMapping } { activeMode, selectedDate, draggingEventId } events =
             , div [ S.class "schedule-column" ]
                 (scheduleHeader activeMode
                     :: List.map quarterHourItem quarterHours
-                    ++ List.map (eventItem draggingEventId eventMapping) eventsOnSelectedDate
+                    ++ List.map (eventItem draggingProtoEvent eventMapping) eventsOnSelectedDate
                 )
             ]
 
@@ -82,11 +82,18 @@ quarterHourItem quarter =
         []
 
 
-eventItem : Maybe String -> EventMapping event -> event -> Html Msg
-eventItem draggingEventId { id, start, finish, label } event =
+eventItem : Maybe ProtoEvent -> EventMapping event -> event -> Html Msg
+eventItem draggingProtoEvent { id, start, finish, label } event =
     let
+        protoEvent =
+            { id = Just <| id event
+            , start = start event
+            , finish = finish event
+            , label = label event
+            }
+
         shadowIfInteracting =
-            case draggingEventId of
+            case draggingProtoEvent of
                 Just _ ->
                     ( "box-shadow", "2px 2px 1px 1px rgb(200, 200, 200)" )
 
@@ -115,8 +122,8 @@ eventItem draggingEventId { id, start, finish, label } event =
                         [ i [ class "fas fa-times" ] [] ]
                     ]
                 ]
-            , eventMoveHandle draggingEventId <| id event
-            , eventExtendHandle draggingEventId <| id event
+            , eventMoveHandle draggingProtoEvent protoEvent
+            , eventExtendHandle draggingProtoEvent protoEvent
             ]
 
 
@@ -125,11 +132,11 @@ toShortTime =
     Date.toFormattedString "h:mm a"
 
 
-eventMoveHandle : Maybe String -> String -> Html Msg
-eventMoveHandle draggingEventId eventId =
+eventMoveHandle : Maybe ProtoEvent -> ProtoEvent -> Html Msg
+eventMoveHandle draggingProtoEvent event =
     let
         cursor =
-            case draggingEventId of
+            case draggingProtoEvent of
                 Just _ ->
                     "grabbing"
 
@@ -139,16 +146,19 @@ eventMoveHandle draggingEventId eventId =
         div
             [ S.class <| "schedule-event-move-handle"
             , style [ ( "cursor", cursor ) ]
-            , on "mousedown" <| Json.Decode.map (StartEventDrag Move eventId) Mouse.position
+            , on "mousedown" <|
+                Json.Decode.map
+                    (StartEventDrag Move event)
+                    Mouse.position
             ]
             []
 
 
-eventExtendHandle : Maybe String -> String -> Html Msg
-eventExtendHandle draggingEventId eventId =
+eventExtendHandle : Maybe ProtoEvent -> ProtoEvent -> Html Msg
+eventExtendHandle draggingProtoEvent event =
     let
         cursor =
-            case draggingEventId of
+            case draggingProtoEvent of
                 Just _ ->
                     "grabbing"
 
@@ -158,9 +168,21 @@ eventExtendHandle draggingEventId eventId =
         div
             [ S.class <| "schedule-event-extend-handle"
             , style [ ( "cursor", cursor ) ]
-            , on "mousedown" <| Json.Decode.map (StartEventDrag Extend eventId) Mouse.position
+            , on "mousedown" <|
+                Json.Decode.map
+                    (StartEventDrag Extend event)
+                    Mouse.position
             ]
             []
+
+
+eventToProtoEvent : { id : String, start : Date, finish : Date, label : String } -> ProtoEvent
+eventToProtoEvent { id, start, finish, label } =
+    { id = Just id
+    , start = start
+    , finish = finish
+    , label = label
+    }
 
 
 

@@ -10,7 +10,9 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
+import Json.Decode.Extra as Decode
 import Json.Encode as Encode
+import Json.Encode.Extra as Encode
 import Labels
 import Mouse
 import Style as S
@@ -41,7 +43,7 @@ init mode =
     in
         ( { activeMode = mode
           , selectedDate = selectedDate
-          , draggingEventId = Nothing
+          , draggingProtoEvent = Nothing
           , dragMode = Move
           , protoEvent = initProtoEvent selectedDate
           , eventFormActive = False
@@ -90,7 +92,11 @@ update config msg model =
         InputEventLabel proto label ->
             let
                 updatedEvent =
-                    { label = label, start = proto.start, finish = proto.finish }
+                    { label = label
+                    , id = proto.id
+                    , start = proto.start
+                    , finish = proto.finish
+                    }
             in
                 ( { model | protoEvent = updatedEvent }, Cmd.none, Nothing )
 
@@ -110,28 +116,29 @@ update config msg model =
               }
             , Cmd.none
             , config.createEvent
-                { start = proto.start
+                { id = proto.id
+                , start = proto.start
                 , finish = proto.finish
                 , label = proto.label
                 }
             )
 
-        StartEventDrag mode eventId mousePosition ->
-            ( { model | draggingEventId = Just eventId, dragMode = mode }
+        StartEventDrag mode protoEvent mousePosition ->
+            ( { model | draggingProtoEvent = Just protoEvent, dragMode = mode }
             , Cmd.none
             , Nothing
             )
 
-        DragEvent eventId mousePosition ->
+        DragEvent protoEvent mousePosition ->
             ( model
-            , encodeEventIdAndMousePosition eventId mousePosition
+            , encodeProtoEventAndMousePosition protoEvent mousePosition
                 |> Ports.fetchQuarterAtPosition
             , Nothing
             )
 
-        StopEventDrag eventId mousePosition ->
-            ( { model | draggingEventId = Nothing }
-            , encodeEventIdAndMousePosition eventId mousePosition
+        StopEventDrag protoEvent mousePosition ->
+            ( { model | draggingProtoEvent = Nothing }
+            , encodeProtoEventAndMousePosition protoEvent mousePosition
                 |> Ports.fetchQuarterAtPosition
             , Nothing
             )
@@ -143,11 +150,15 @@ update config msg model =
                     ( model, Cmd.none, Nothing )
 
                 -- TODO: Reduce nesting
-                Ok ( eventId, quarter ) ->
+                Ok ( protoEvent, quarter ) ->
                     case dateFromQuarter model quarter of
-                        Err _ ->
-                            -- TODO: Deal with errors properly
-                            ( model, Cmd.none, Nothing )
+                        Err err ->
+                            let
+                                foo =
+                                    (Debug.log "error: " err)
+                            in
+                                -- TODO: Deal with errors properly
+                                ( model, Cmd.none, Nothing )
 
                         Ok newDate ->
                             -- TODO: This is potentially buggy, because Ports
@@ -156,42 +167,45 @@ update config msg model =
                             -- original request to the Port.
                             case model.dragMode of
                                 Create ->
-                                    let
-                                        event =
-                                            { start = model.protoEvent.start
-                                            , finish = newDate
-                                            , label = model.protoEvent.label
-                                            }
-                                    in
-                                        ( model
-                                        , Cmd.none
-                                        , config.createEvent event
-                                        )
+                                    ( model
+                                    , Cmd.none
+                                    , config.createEvent { protoEvent | finish = newDate }
+                                    )
 
                                 Move ->
                                     ( model
                                     , Cmd.none
-                                    , config.updateEventStart eventId newDate
+                                    , config.updateEventStart { protoEvent | start = newDate }
                                     )
 
                                 Extend ->
                                     ( model
                                     , Cmd.none
-                                    , config.updateEventFinish eventId newDate
+                                    , config.updateEventFinish { protoEvent | finish = newDate }
                                     )
 
         RemoveEvent eventId ->
             ( model, Cmd.none, config.removeEvent eventId )
 
 
-encodeEventIdAndMousePosition : String -> Mouse.Position -> String
-encodeEventIdAndMousePosition eventId mousePosition =
+encodeProtoEventAndMousePosition : ProtoEvent -> Mouse.Position -> String
+encodeProtoEventAndMousePosition event mousePosition =
     Encode.encode 0 <|
         Encode.object
-            [ ( "eventId", Encode.string eventId )
+            [ ( "event", protoEventEncoder event )
             , ( "x", Encode.int mousePosition.x )
             , ( "y", Encode.int mousePosition.y )
             ]
+
+
+protoEventEncoder : ProtoEvent -> Encode.Value
+protoEventEncoder { id, start, finish, label } =
+    Encode.object
+        [ ( "eventId", Encode.maybe Encode.string id )
+        , ( "start", Encode.string <| Date.toUtcIsoString start )
+        , ( "finish", Encode.string <| Date.toUtcIsoString finish )
+        , ( "label", Encode.string label )
+        ]
 
 
 dateFromQuarter : Model -> String -> Result String Date
@@ -247,7 +261,7 @@ minutesInHour =
 
 
 view : Config event msg -> Model -> List event -> Html Msg
-view config ({ activeMode, draggingEventId } as model) events =
+view config ({ activeMode, draggingProtoEvent } as model) events =
     let
         ( viewControls, viewCalendar ) =
             case activeMode of
@@ -257,8 +271,8 @@ view config ({ activeMode, draggingEventId } as model) events =
                     )
 
         dragCursorStyle =
-            case draggingEventId of
-                Just id ->
+            case draggingProtoEvent of
+                Just _ ->
                     ( "cursor", "grabbing" )
 
                 Nothing ->
@@ -353,9 +367,11 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     let
         ( mouseMoves, mouseUps ) =
-            case model.draggingEventId of
-                Just id ->
-                    ( Mouse.moves <| DragEvent id, Mouse.ups <| StopEventDrag id )
+            case model.draggingProtoEvent of
+                Just event ->
+                    ( Mouse.moves <| DragEvent event
+                    , Mouse.ups <| StopEventDrag event
+                    )
 
                 Nothing ->
                     ( Sub.none, Sub.none )
@@ -369,9 +385,19 @@ subscriptions model =
             ]
 
 
-decodeQuarter : String -> Result String ( String, String )
+decodeQuarter : String -> Result String ( ProtoEvent, String )
 decodeQuarter =
     Decode.map2 (,)
-        (Decode.field "eventId" Decode.string)
+        (Decode.field "event" protoEventDecoder)
         (Decode.field "quarter" Decode.string)
         |> Decode.decodeString
+
+
+protoEventDecoder : Decode.Decoder ProtoEvent
+protoEventDecoder =
+    Decode.map4
+        ProtoEvent
+        (Decode.maybe (Decode.field "eventId" Decode.string))
+        (Decode.field "start" Decode.date)
+        (Decode.field "finish" Decode.date)
+        (Decode.field "label" Decode.string)
