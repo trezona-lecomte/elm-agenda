@@ -22,7 +22,8 @@ describe('Event Management', function() {
       cy.get('.input').type('Foo bar event');
       cy.contains('Save').click();
 
-      cy.get('elm-agenda__schedule-event-remove-link').click({force: true});
+      // TODO: Probably need to start using data-* attributes...
+      cy.get(':nth-child(99) > .elm-agenda__schedule-event-content > .elm-agenda__schedule-event-remove-button > .elm-agenda__schedule-event-remove-link > .svg-inline--fa').click({force: true});
 
       cy.get('div.elm-agenda__schedule-event-summary').should('not.contain', 'Foo bar event');
     });

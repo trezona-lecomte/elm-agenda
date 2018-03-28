@@ -35,14 +35,19 @@ modes =
 
 init : Mode -> ( Model, Cmd Msg )
 init mode =
-    ( { activeMode = mode
-      , selectedDate = Date.fromParts 1970 Date.Jan 1 0 0 0 0
-      , draggingEventId = Nothing
-      , dragMode = Move
-      , protoEvent = Nothing
-      }
-    , Task.perform SetDate Date.now
-    )
+    let
+        selectedDate =
+            Date.fromParts 1970 Date.Jan 1 0 0 0 0
+    in
+        ( { activeMode = mode
+          , selectedDate = selectedDate
+          , draggingEventId = Nothing
+          , dragMode = Move
+          , protoEvent = initProtoEvent selectedDate
+          , eventFormActive = False
+          }
+        , Task.perform SetDate Date.now
+        )
 
 
 
@@ -74,43 +79,35 @@ update config msg model =
             )
 
         AddEvent ->
-            let
-                defaultStart =
-                    Date.fromParts
-                        (Date.year model.selectedDate)
-                        (Date.month model.selectedDate)
-                        (Date.day model.selectedDate)
-                        8
-                        0
-                        0
-                        0
-
-                defaultFinish =
-                    Date.add Date.Minute 15 defaultStart
-
-                protoEvent =
-                    { start = defaultStart
-                    , finish = defaultFinish
-                    , label = ""
-                    }
-            in
-                ( { model | protoEvent = Just <| protoEvent }
-                , Cmd.none
-                , Nothing
-                )
+            ( { model
+                | protoEvent = initProtoEvent model.selectedDate
+                , eventFormActive = True
+              }
+            , Cmd.none
+            , Nothing
+            )
 
         InputEventLabel proto label ->
             let
                 updatedEvent =
                     { label = label, start = proto.start, finish = proto.finish }
             in
-                ( { model | protoEvent = Just updatedEvent }, Cmd.none, Nothing )
+                ( { model | protoEvent = updatedEvent }, Cmd.none, Nothing )
 
         CloseEventForm ->
-            ( { model | protoEvent = Nothing }, Cmd.none, Nothing )
+            ( { model
+                | protoEvent = initProtoEvent model.selectedDate
+                , eventFormActive = False
+              }
+            , Cmd.none
+            , Nothing
+            )
 
         PersistProtoEvent proto ->
-            ( { model | protoEvent = Nothing }
+            ( { model
+                | protoEvent = initProtoEvent model.selectedDate
+                , eventFormActive = False
+              }
             , Cmd.none
             , config.createEvent
                 { start = proto.start
@@ -152,20 +149,32 @@ update config msg model =
                             -- TODO: Deal with errors properly
                             ( model, Cmd.none, Nothing )
 
-                        Ok newFinishDate ->
-                            let
-                                updateEvent =
-                                    case model.dragMode of
-                                        Move ->
-                                            config.updateEventStart
+                        Ok newDate ->
+                            case model.dragMode of
+                                Create ->
+                                    let
+                                        event =
+                                            { start = model.protoEvent.start
+                                            , finish = newDate
+                                            , label = model.protoEvent.label
+                                            }
+                                    in
+                                        ( model
+                                        , Cmd.none
+                                        , config.createEvent event
+                                        )
 
-                                        Extend ->
-                                            config.updateEventFinish
-                            in
-                                ( model
-                                , Cmd.none
-                                , updateEvent eventId newFinishDate
-                                )
+                                Move ->
+                                    ( model
+                                    , Cmd.none
+                                    , config.updateEventStart eventId newDate
+                                    )
+
+                                Extend ->
+                                    ( model
+                                    , Cmd.none
+                                    , config.updateEventFinish eventId newDate
+                                    )
 
         RemoveEvent eventId ->
             ( model, Cmd.none, config.removeEvent eventId )
@@ -286,52 +295,50 @@ viewAddEventButton =
 
 viewEventForm : Model -> Html Msg
 viewEventForm model =
-    case model.protoEvent of
-        Just event ->
-            div
-                [ class "modal is-active" ]
-                [ div [ class "modal-background" ]
-                    []
-                , div [ class "modal-card" ]
-                    [ header [ class "modal-card-head" ]
-                        [ p [ class "modal-card-title" ]
-                            [ text "Modal title" ]
-                        , button [ class "delete", onClick CloseEventForm ]
-                            []
-                        ]
-                    , section [ class "modal-card-body" ]
-                        [ Html.form []
-                            [ div [ class "field" ]
-                                [ label [ class "label" ] [ text "Event Name" ]
-                                , div [ class "control" ]
-                                    [ input
-                                        [ class "input"
-                                        , type_ "text"
-                                        , placeholder "Text input"
-                                        , onInput <| InputEventLabel event
-                                        ]
-                                        []
+    if model.eventFormActive then
+        div
+            [ class "modal is-active" ]
+            [ div [ class "modal-background" ]
+                []
+            , div [ class "modal-card" ]
+                [ header [ class "modal-card-head" ]
+                    [ p [ class "modal-card-title" ]
+                        [ text "Modal title" ]
+                    , button [ class "delete", onClick CloseEventForm ]
+                        []
+                    ]
+                , section [ class "modal-card-body" ]
+                    [ Html.form []
+                        [ div [ class "field" ]
+                            [ label [ class "label" ] [ text "Event Name" ]
+                            , div [ class "control" ]
+                                [ input
+                                    [ class "input"
+                                    , type_ "text"
+                                    , placeholder "Text input"
+                                    , onInput <| InputEventLabel model.protoEvent
                                     ]
+                                    []
                                 ]
                             ]
                         ]
-                    , footer [ class "modal-card-foot" ]
-                        [ button
-                            [ class "button is-success"
-                            , onClick <| PersistProtoEvent event
-                            ]
-                            [ text "Save" ]
-                        , button
-                            [ class "button"
-                            , onClick CloseEventForm
-                            ]
-                            [ text "Cancel" ]
+                    ]
+                , footer [ class "modal-card-foot" ]
+                    [ button
+                        [ class "button is-success"
+                        , onClick <| PersistProtoEvent model.protoEvent
                         ]
+                        [ text "Save" ]
+                    , button
+                        [ class "button"
+                        , onClick CloseEventForm
+                        ]
+                        [ text "Cancel" ]
                     ]
                 ]
-
-        Nothing ->
-            div [ class "modal" ] []
+            ]
+    else
+        div [ class "modal" ] []
 
 
 

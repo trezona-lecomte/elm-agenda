@@ -1,6 +1,7 @@
 module Calendar.Types exposing (..)
 
 import Date exposing (Date)
+import Date.Extra as Date
 import Mouse
 
 
@@ -9,7 +10,8 @@ type alias Model =
     , selectedDate : Date
     , draggingEventId : Maybe String
     , dragMode : DragMode
-    , protoEvent : Maybe ProtoEvent
+    , protoEvent : ProtoEvent
+    , eventFormActive : Bool
     }
 
 
@@ -28,6 +30,28 @@ type alias ProtoEvent =
     , finish : Date
     , label : String
     }
+
+
+initProtoEvent : Date -> ProtoEvent
+initProtoEvent date =
+    let
+        defaultStart =
+            Date.fromParts
+                (Date.year date)
+                (Date.month date)
+                (Date.day date)
+                8
+                0
+                0
+                0
+
+        defaultFinish =
+            Date.add Date.Minute 15 defaultStart
+    in
+        { start = defaultStart
+        , finish = defaultFinish
+        , label = ""
+        }
 
 
 type Msg
