@@ -1,9 +1,20 @@
+var moment = require('moment');
+
 describe('Navigation', function() {
-  const today = new Date();
-  const yesterday = new Date();
-  const tomorrow = new Date();
-  yesterday.setDate(today.getDate() - 1);
-  tomorrow.setDate(today.getDate() + 1);
+  const todayDate = new Date();
+  const yesterdayDate = new Date();
+  const tomorrowDate = new Date();
+
+  yesterdayDate.setDate(todayDate.getDate() - 1);
+  tomorrowDate.setDate(todayDate.getDate() + 1);
+
+  const today = moment(todayDate);
+  const yesterday = moment(yesterdayDate);
+  const tomorrow = moment(tomorrowDate);
+
+  function shortFormat(momentDate) {
+    return momentDate.format("ddd MMM D YYYY");
+  }
 
   before(function() {
     cy.visit('/');
@@ -16,20 +27,20 @@ describe('Navigation', function() {
     });
 
     it('defaults to today', function () {
-      cy.contains(today.toDateString());
+      cy.contains(shortFormat(today));
     });
 
     it('paginates in daily intervals', function() {
       cy.contains('>').click();
-      cy.contains(tomorrow.toDateString());
+      cy.contains(shortFormat(tomorrow));
 
       cy.contains('<').click().click();
-      cy.contains(yesterday.toDateString());
+      cy.contains(shortFormat(yesterday));
     });
 
     it('allows resetting to today', function() {
       cy.contains('Today').click();
-      cy.contains(today.toDateString());
+      cy.contains(shortFormat(today));
     });
   });
 });
