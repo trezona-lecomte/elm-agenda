@@ -20,21 +20,21 @@
     <script>
      var app = Elm.Main.fullscreen();
 
-     app.ports.fetchQuarterAtPosition.subscribe(function(protoEventAndPosition) {
+     function sendQuarterAtPosition(port, protoEventAndPosition) {
        const input = JSON.parse(protoEventAndPosition);
 
        /* TODO: OffsetX - scrollLeft? */
-       const offsetY = input.y - document.documentElement.scrollTop
+       const offsetY = input.y - document.documentElement.scrollTop;
 
        const draggedToElement =
          document
            .elementsFromPoint(input.x, offsetY)
-           .find(e => e.className.includes("schedule-quarter-hour-item"))
+           .find(e => e.className.includes("schedule-quarter-hour-item"));
 
        if (draggedToElement !== null && draggedToElement !== undefined) {
-         const quarter = draggedToElement.id.split("quarter-")[1]
+         const quarter = draggedToElement.id.split("quarter-")[1];
 
-         app.ports.fetchedQuarterAtPosition.send(
+         port.send(
            JSON.stringify(
              {
                event: {
@@ -46,8 +46,16 @@
                quarter: quarter
              }
            )
-         )
+         );
        }
+     }
+
+     app.ports.dragEvent.subscribe(function(protoEventAndPosition) {
+       sendQuarterAtPosition(app.ports.draggedEvent, protoEventAndPosition);
+     });
+
+     app.ports.stopDraggingEvent.subscribe(function(protoEventAndPosition) {
+       sendQuarterAtPosition(app.ports.stoppedDraggingEvent, protoEventAndPosition);
      });
     </script>
   </body>

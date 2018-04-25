@@ -12,6 +12,7 @@ type alias Model =
     , dragMode : DragMode
     , protoEvent : ProtoEvent
     , eventFormActive : Bool
+    , virtualEvents : List ProtoEvent
     }
 
 
@@ -69,5 +70,6 @@ type Msg
     | StartEventDrag DragMode ProtoEvent Mouse.Position
     | DragEvent ProtoEvent Mouse.Position
     | StopEventDrag ProtoEvent Mouse.Position
-    | AttemptEventUpdateFromDrag (Result String ( ProtoEvent, String ))
+    | CacheEventUpdateFromFromDrag (Result String ( ProtoEvent, String ))
+    | PersistEventUpdateFromDrag (Result String ( ProtoEvent, String ))
     | RemoveEvent String

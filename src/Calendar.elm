@@ -35,8 +35,8 @@ modes =
     [ Daily ]
 
 
-init : Mode -> ( Model, Cmd Msg )
-init mode =
+init : Mode -> EventMapping event -> List event -> ( Model, Cmd Msg )
+init mode eventMapping events =
     let
         selectedDate =
             Date.fromParts 1970 Date.Jan 1 0 0 0 0
@@ -47,9 +47,23 @@ init mode =
           , dragMode = Move
           , protoEvent = initProtoEvent selectedDate
           , eventFormActive = False
+          , virtualEvents = virtualiseEvents eventMapping events
           }
         , Task.perform SetDate Date.now
         )
+
+
+virtualiseEvents : EventMapping event -> List event -> List ProtoEvent
+virtualiseEvents map =
+    let
+        virtualise event =
+            { id = Just <| map.id event
+            , start = map.start event
+            , finish = map.finish event
+            , label = map.label event
+            }
+    in
+        List.map virtualise
 
 
 
@@ -132,18 +146,52 @@ update config msg model =
         DragEvent protoEvent mousePosition ->
             ( model
             , encodeProtoEventAndMousePosition protoEvent mousePosition
-                |> Ports.fetchQuarterAtPosition
+                |> Ports.dragEvent
             , Nothing
             )
 
         StopEventDrag protoEvent mousePosition ->
             ( { model | draggingProtoEvent = Nothing }
             , encodeProtoEventAndMousePosition protoEvent mousePosition
-                |> Ports.fetchQuarterAtPosition
+                |> Ports.stopDraggingEvent
             , Nothing
             )
 
-        AttemptEventUpdateFromDrag result ->
+        CacheEventUpdateFromFromDrag result ->
+            -- TODO: Deal with errors properly
+            case result of
+                Err error ->
+                    ( model, Cmd.none, Nothing )
+
+                Ok ( protoEvent, quarter ) ->
+                    case dateFromQuarter model quarter of
+                        Err err ->
+                            ( model, Cmd.none, Nothing )
+
+                        -- TODO: We should really wrap up the info of what kind of
+                        -- update we're making in some type that can be constructed
+                        -- based on the knowledge of what port the update came through.
+                        Ok newDate ->
+                            case model.dragMode of
+                                Create ->
+                                    ( replaceProtoEvent model { protoEvent | finish = newDate }
+                                    , Cmd.none
+                                    , Nothing
+                                    )
+
+                                Move ->
+                                    ( replaceProtoEvent model (moveProtoEvent protoEvent newDate)
+                                    , Cmd.none
+                                    , Nothing
+                                    )
+
+                                Extend ->
+                                    ( replaceProtoEvent model { protoEvent | finish = newDate }
+                                    , Cmd.none
+                                    , Nothing
+                                    )
+
+        PersistEventUpdateFromDrag result ->
             case result of
                 Err error ->
                     -- TODO: Deal with errors properly
@@ -186,6 +234,33 @@ update config msg model =
 
         RemoveEvent eventId ->
             ( model, Cmd.none, config.removeEvent eventId )
+
+
+moveProtoEvent : ProtoEvent -> Date -> ProtoEvent
+moveProtoEvent ({ id, start, finish, label } as protoEvent) newStart =
+    let
+        offset =
+            Date.diff Date.Minute start newStart
+
+        newFinish =
+            Date.add Date.Minute offset finish
+    in
+        { protoEvent | start = newStart, finish = newFinish }
+
+
+replaceProtoEvent : Model -> ProtoEvent -> Model
+replaceProtoEvent model newEvent =
+    let
+        replaceIfIdMatches event =
+            if event.id == newEvent.id then
+                newEvent
+            else
+                event
+
+        events =
+            List.map replaceIfIdMatches model.virtualEvents
+    in
+        { model | virtualEvents = events }
 
 
 encodeProtoEventAndMousePosition : ProtoEvent -> Mouse.Position -> String
@@ -260,14 +335,14 @@ minutesInHour =
 -- VIEW
 
 
-view : Config event msg -> Model -> List event -> Html Msg
-view config ({ activeMode, draggingProtoEvent } as model) events =
+view : Model -> Html Msg
+view ({ activeMode, draggingProtoEvent, virtualEvents } as model) =
     let
         ( viewControls, viewCalendar ) =
             case activeMode of
                 Daily ->
                     ( View.Daily.paginationControls model ( Today, Previous, Next )
-                    , View.Daily.calendar config model events
+                    , View.Daily.calendar model virtualEvents
                     )
 
         dragCursorStyle =
@@ -379,9 +454,12 @@ subscriptions model =
         Sub.batch
             [ mouseMoves
             , mouseUps
-            , Ports.fetchedQuarterAtPosition <|
+            , Ports.draggedEvent <|
                 decodeQuarter
-                    >> AttemptEventUpdateFromDrag
+                    >> CacheEventUpdateFromFromDrag
+            , Ports.stoppedDraggingEvent <|
+                decodeQuarter
+                    >> PersistEventUpdateFromDrag
             ]
 
 

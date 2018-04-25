@@ -1,6 +1,5 @@
 module View.Daily exposing (..)
 
-import Calendar.Config exposing (Config, EventMapping)
 import Calendar.Types exposing (..)
 import Date exposing (Date)
 import Date.Extra as Date
@@ -35,12 +34,12 @@ simpleButton label msg =
     button [ class "button", onClick msg ] [ text label ]
 
 
-calendar : Config event msg -> Model -> List event -> Html Msg
-calendar { eventMapping } { activeMode, selectedDate, draggingProtoEvent } events =
+calendar : Model -> List ProtoEvent -> Html Msg
+calendar { activeMode, selectedDate, draggingProtoEvent } events =
     let
         eventsOnSelectedDate =
             List.filter
-                (\e -> Date.equalBy Date.Day (eventMapping.start e) selectedDate)
+                (\e -> Date.equalBy Date.Day e.start selectedDate)
                 events
     in
         div [ S.class "day-calendar" ]
@@ -49,7 +48,7 @@ calendar { eventMapping } { activeMode, selectedDate, draggingProtoEvent } event
             , div [ S.class "schedule-column" ]
                 (scheduleHeader activeMode
                     :: List.map quarterHourItem quarterHours
-                    ++ List.map (eventItem draggingProtoEvent eventMapping) eventsOnSelectedDate
+                    ++ List.map (eventItem draggingProtoEvent) eventsOnSelectedDate
                 )
             ]
 
@@ -82,16 +81,9 @@ quarterHourItem quarter =
         []
 
 
-eventItem : Maybe ProtoEvent -> EventMapping event -> event -> Html Msg
-eventItem draggingProtoEvent { id, start, finish, label } event =
+eventItem : Maybe ProtoEvent -> ProtoEvent -> Html Msg
+eventItem draggingProtoEvent protoEvent =
     let
-        protoEvent =
-            { id = Just <| id event
-            , start = start event
-            , finish = finish event
-            , label = label event
-            }
-
         shadowIfInteracting =
             case draggingProtoEvent of
                 Just _ ->
@@ -99,28 +91,36 @@ eventItem draggingProtoEvent { id, start, finish, label } event =
 
                 Nothing ->
                     ( "", "" )
+
+        removeButtonIfPersisted =
+            case protoEvent.id of
+                Nothing ->
+                    div [] []
+
+                Just id ->
+                    div [ S.class "schedule-event-remove-button" ]
+                        [ a [ S.class "schedule-event-remove-link icon is-small", onClick <| RemoveEvent id ]
+                            [ i [ class "fas fa-times" ] [] ]
+                        ]
     in
         div
             [ S.class "schedule-event-item"
             , style
-                [ gridRowForEvent ( start event, finish event )
+                [ gridRowForEvent ( protoEvent.start, protoEvent.finish )
                 , ( "grid-column", "1" )
                 , shadowIfInteracting
                 ]
             ]
             -- TODO: Gracefully handle a very long event name.
             [ div [ S.class "schedule-event-content is-size-7" ]
-                [ div [ S.class "schedule-event-summary" ] [ text <| label event ]
+                [ div [ S.class "schedule-event-summary" ] [ text <| protoEvent.label ]
                 , div [ S.class "schedule-event-time" ]
                     [ text <|
                         String.join
                             " - "
-                            (List.map toShortTime [ start event, finish event ])
+                            (List.map toShortTime [ protoEvent.start, protoEvent.finish ])
                     ]
-                , div [ S.class "schedule-event-remove-button" ]
-                    [ a [ S.class "schedule-event-remove-link icon is-small", onClick <| RemoveEvent <| id event ]
-                        [ i [ class "fas fa-times" ] [] ]
-                    ]
+                , removeButtonIfPersisted
                 ]
             , eventMoveHandle draggingProtoEvent protoEvent
             , eventExtendHandle draggingProtoEvent protoEvent

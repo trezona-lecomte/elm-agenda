@@ -1,7 +1,13 @@
 port module Calendar.Ports exposing (..)
 
 
-port fetchQuarterAtPosition : String -> Cmd msg
+port dragEvent : String -> Cmd msg
 
 
-port fetchedQuarterAtPosition : (String -> msg) -> Sub msg
+port draggedEvent : (String -> msg) -> Sub msg
+
+
+port stopDraggingEvent : String -> Cmd msg
+
+
+port stoppedDraggingEvent : (String -> msg) -> Sub msg
