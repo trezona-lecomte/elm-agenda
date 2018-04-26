@@ -110,7 +110,7 @@ TODO: Summarise design choices I'm making differently to Elm Calendar.
 * ~~Change to a grabbing cursor when moving or extending~~
 * ~~Add new events (button)~~
 * ~~Remove events~~
-* Drag to add new events
+* ~~Drag to add new events~~
 * Display: deal with overlapping events
 * Remove event confirmation
 
