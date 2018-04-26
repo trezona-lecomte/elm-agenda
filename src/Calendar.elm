@@ -1,4 +1,4 @@
-module Calendar exposing (init, subscriptions, update, view)
+module Calendar exposing (init, subscriptions, update, view, syncEvents)
 
 import Basics.Extra exposing (fmod)
 import Calendar.Config exposing (Config, EventMapping)
@@ -328,6 +328,11 @@ minutesInDay =
 minutesInHour : number
 minutesInHour =
     60
+
+
+syncEvents : EventMapping event -> List event -> Model -> Model
+syncEvents map events model =
+    { model | virtualEvents = virtualiseEvents map events }
 
 
 
