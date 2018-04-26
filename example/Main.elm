@@ -42,28 +42,11 @@ type alias Event =
 init : ( Model, Cmd Msg )
 init =
     let
-        events =
-            -- []
-            -- TODO: Move fixture data to a dedicated module
-            [ { id = "1"
-              , start = Date.fromParts 2018 Date.Apr 26 1 0 0 0
-              , finish = Date.fromParts 2018 Date.Apr 26 1 45 0 0
-              , label = "Abstract out some crisp encapsulations"
-              }
-            ]
-
         ( calendarModel, calendarCmd ) =
-            Calendar.init Calendar.Daily eventMapping events
-
-        -- , { id = "2"
-        --   , start = Date.fromParts 2018 Date.Mar 26 11 30 0 0
-        --   , finish = Date.fromParts 2018 Date.Mar 26 12 0 0 0
-        --   , label = "Yell at fools on the internet"
-        --   }
-        -- ]
+            Calendar.init Calendar.Daily eventMapping []
     in
         { calendarModel = calendarModel
-        , events = events
+        , events = []
         , errors = []
         }
             ! [ Cmd.map UpdateCalendar calendarCmd ]
@@ -100,13 +83,10 @@ update msg model =
 
                 updatedModel =
                     handleCalendarUpdate maybeMsg { model | calendarModel = updatedCalendar }
-
-                syncedModel =
-                    { model | calendarModel = Calendar.syncEvents eventMapping updatedModel.events updatedModel.calendarModel }
             in
                 -- Wrap all calendar cmds in our Msg type so we can send
                 -- them to the Elm Runtime as if they were our own cmds.
-                syncedModel ! [ Cmd.map UpdateCalendar calendarCmd ]
+                updatedModel ! [ Cmd.map UpdateCalendar calendarCmd ]
 
         NoOp ->
             model ! []
@@ -118,7 +98,14 @@ handleCalendarUpdate msg model =
         Just (CreateEvent protoEvent) ->
             case createEvent model protoEvent of
                 Ok event ->
-                    { model | events = event :: model.events }
+                    let
+                        events =
+                            event :: model.events
+                    in
+                        { model
+                            | events = events
+                            , calendarModel = Calendar.syncEvents eventMapping events model.calendarModel
+                        }
 
                 Err error ->
                     { model | errors = error :: model.errors }
@@ -130,7 +117,14 @@ handleCalendarUpdate msg model =
             { model | events = List.map (changeEventFinish protoEvent) model.events }
 
         Just (RemoveEvent eventId) ->
-            { model | events = List.filter (\e -> e.id /= eventId) model.events }
+            let
+                events =
+                    List.filter (\e -> e.id /= eventId) model.events
+            in
+                { model
+                    | events = events
+                    , calendarModel = Calendar.syncEvents eventMapping events model.calendarModel
+                }
 
         Nothing ->
             model
@@ -140,8 +134,8 @@ createEvent : Model -> Calendar.ProtoEvent -> Result String Event
 createEvent model { start, finish, label } =
     List.map (\e -> String.toInt e.id) model.events
         |> Result.combine
-        |> Result.andThen (List.maximum >> Result.fromMaybe "")
-        |> Result.withDefault 0
+        |> Result.andThen (List.maximum >> Result.fromMaybe "" >> Result.map (\id -> id + 1))
+        |> Result.withDefault 1
         |> validateEvent start finish label
 
 

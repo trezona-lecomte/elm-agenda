@@ -43,7 +43,7 @@ initProtoEvent date =
         { id = Nothing
         , start = date
         , finish = defaultFinish
-        , label = ""
+        , label = "Untitled"
         }
 
 

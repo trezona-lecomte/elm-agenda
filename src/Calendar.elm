@@ -208,19 +208,19 @@ update config msg model =
                         Ok newDate ->
                             case dragMode of
                                 Create ->
-                                    ( model
+                                    ( { model | draggingProtoEvent = Nothing }
                                     , Cmd.none
                                     , config.createEvent { protoEvent | finish = newDate }
                                     )
 
                                 Move ->
-                                    ( model
+                                    ( { model | draggingProtoEvent = Nothing }
                                     , Cmd.none
                                     , config.updateEventStart { protoEvent | start = newDate }
                                     )
 
                                 Extend ->
-                                    ( model
+                                    ( { model | draggingProtoEvent = Nothing }
                                     , Cmd.none
                                     , config.updateEventFinish { protoEvent | finish = newDate }
                                     )
