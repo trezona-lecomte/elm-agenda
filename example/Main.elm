@@ -100,13 +100,10 @@ update msg model =
 
                 updatedModel =
                     handleCalendarUpdate maybeMsg { model | calendarModel = updatedCalendar }
-
-                syncedModel =
-                    { updatedModel | calendarModel = Calendar.syncEvents eventMapping updatedModel.events updatedModel.calendarModel }
             in
                 -- Wrap all calendar cmds in our Msg type so we can send
                 -- them to the Elm Runtime as if they were our own cmds.
-                syncedModel ! [ Cmd.map UpdateCalendar calendarCmd ]
+                updatedModel ! [ Cmd.map UpdateCalendar calendarCmd ]
 
         NoOp ->
             model ! []
@@ -118,7 +115,14 @@ handleCalendarUpdate msg model =
         Just (CreateEvent protoEvent) ->
             case createEvent model protoEvent of
                 Ok event ->
-                    { model | events = event :: model.events }
+                    let
+                        events =
+                            event :: model.events
+                    in
+                        { model
+                            | events = events
+                            , calendarModel = Calendar.syncEvents eventMapping events model.calendarModel
+                        }
 
                 Err error ->
                     { model | errors = error :: model.errors }
