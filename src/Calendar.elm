@@ -226,7 +226,7 @@ update config msg model =
                                     )
 
         RemoveEvent eventId ->
-            ( model, Cmd.none, config.removeEvent eventId )
+            ( removeProtoEvent eventId model, Cmd.none, config.removeEvent eventId )
 
 
 moveProtoEvent : ProtoEvent -> Date -> ProtoEvent
@@ -254,6 +254,11 @@ replaceProtoEvent model newEvent =
             List.map replaceIfIdMatches model.virtualEvents
     in
         { model | virtualEvents = events }
+
+
+removeProtoEvent : String -> Model -> Model
+removeProtoEvent id model =
+    { model | virtualEvents = List.filter (\e -> e.id /= Just id) model.virtualEvents }
 
 
 encodeEventDrag : DragMode -> ProtoEvent -> Mouse.Position -> String
