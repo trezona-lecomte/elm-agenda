@@ -152,6 +152,6 @@ check out other useful stuff from Flux [here on Github][flux-github].
 
 [full-calendar-site]: https://fullcalendar.io
 [elm-calendar-github-repo]: https://github.com/thebritican/elm-calendar
-[google-calendar-aip]: https://developers.google.com/calendar
+[google-calendar-api]: https://developers.google.com/calendar
 [flux-github]: https://github.com/fluxfederation
 
