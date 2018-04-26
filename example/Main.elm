@@ -117,7 +117,14 @@ handleCalendarUpdate msg model =
             { model | events = List.map (changeEventFinish protoEvent) model.events }
 
         Just (RemoveEvent eventId) ->
-            { model | events = List.filter (\e -> e.id /= eventId) model.events }
+            let
+                events =
+                    List.filter (\e -> e.id /= eventId) model.events
+            in
+                { model
+                    | events = events
+                    , calendarModel = Calendar.syncEvents eventMapping events model.calendarModel
+                }
 
         Nothing ->
             model
