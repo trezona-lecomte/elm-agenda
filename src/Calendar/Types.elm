@@ -26,6 +26,15 @@ type DragMode
     | Extend
 
 
+type alias Event e =
+    { e
+        | id : String
+        , start : Date
+        , finish : Date
+        , label : String
+    }
+
+
 type alias ProtoEvent =
     { id : Maybe String
     , start : Date
