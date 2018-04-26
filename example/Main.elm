@@ -102,7 +102,7 @@ update msg model =
                     handleCalendarUpdate maybeMsg { model | calendarModel = updatedCalendar }
 
                 syncedModel =
-                    { model | calendarModel = Calendar.syncEvents eventMapping updatedModel.events updatedModel.calendarModel }
+                    { updatedModel | calendarModel = Calendar.syncEvents eventMapping updatedModel.events updatedModel.calendarModel }
             in
                 -- Wrap all calendar cmds in our Msg type so we can send
                 -- them to the Elm Runtime as if they were our own cmds.
@@ -140,8 +140,8 @@ createEvent : Model -> Calendar.ProtoEvent -> Result String Event
 createEvent model { start, finish, label } =
     List.map (\e -> String.toInt e.id) model.events
         |> Result.combine
-        |> Result.andThen (List.maximum >> Result.fromMaybe "")
-        |> Result.withDefault 0
+        |> Result.andThen (List.maximum >> Result.fromMaybe "" >> Result.map (\id -> id + 1))
+        |> Result.withDefault 1
         |> validateEvent start finish label
 
 
