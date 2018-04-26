@@ -42,28 +42,11 @@ type alias Event =
 init : ( Model, Cmd Msg )
 init =
     let
-        events =
-            -- []
-            -- TODO: Move fixture data to a dedicated module
-            [ { id = "1"
-              , start = Date.fromParts 2018 Date.Apr 26 1 0 0 0
-              , finish = Date.fromParts 2018 Date.Apr 26 1 45 0 0
-              , label = "Abstract out some crisp encapsulations"
-              }
-            ]
-
         ( calendarModel, calendarCmd ) =
-            Calendar.init Calendar.Daily eventMapping events
-
-        -- , { id = "2"
-        --   , start = Date.fromParts 2018 Date.Mar 26 11 30 0 0
-        --   , finish = Date.fromParts 2018 Date.Mar 26 12 0 0 0
-        --   , label = "Yell at fools on the internet"
-        --   }
-        -- ]
+            Calendar.init Calendar.Daily eventMapping []
     in
         { calendarModel = calendarModel
-        , events = events
+        , events = []
         , errors = []
         }
             ! [ Cmd.map UpdateCalendar calendarCmd ]
