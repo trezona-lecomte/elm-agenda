@@ -67,9 +67,9 @@ type Msg
     | InputEventLabel ProtoEvent String
     | CloseEventForm
     | PersistProtoEvent ProtoEvent
-    | StartEventDrag DragMode ProtoEvent Mouse.Position
+    | StartDraggingEvent DragMode ProtoEvent Mouse.Position
     | DragEvent DragMode ProtoEvent Mouse.Position
-    | StopEventDrag DragMode ProtoEvent Mouse.Position
+    | StopDraggingEvent DragMode ProtoEvent Mouse.Position
     | CacheEventUpdateFromFromDrag (Result String EventDrag)
     | PersistEventUpdateFromDrag (Result String EventDrag)
     | RemoveEvent String

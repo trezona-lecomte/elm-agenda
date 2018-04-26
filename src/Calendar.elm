@@ -137,7 +137,7 @@ update config msg model =
                 }
             )
 
-        StartEventDrag mode protoEvent mousePosition ->
+        StartDraggingEvent mode protoEvent mousePosition ->
             ( { model | draggingProtoEvent = Just protoEvent, dragMode = mode }
             , Cmd.none
             , Nothing
@@ -150,7 +150,7 @@ update config msg model =
             , Nothing
             )
 
-        StopEventDrag dragMode protoEvent mousePosition ->
+        StopDraggingEvent dragMode protoEvent mousePosition ->
             ( { model | draggingProtoEvent = Nothing }
             , encodeEventDrag dragMode protoEvent mousePosition
                 |> Ports.stopDraggingEvent
@@ -449,7 +449,7 @@ subscriptions model =
             case model.draggingProtoEvent of
                 Just event ->
                     ( Mouse.moves <| DragEvent model.dragMode event
-                    , Mouse.ups <| StopEventDrag model.dragMode event
+                    , Mouse.ups <| StopDraggingEvent model.dragMode event
                     )
 
                 Nothing ->

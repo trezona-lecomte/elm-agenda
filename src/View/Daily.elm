@@ -148,7 +148,7 @@ eventMoveHandle draggingProtoEvent event =
             , style [ ( "cursor", cursor ) ]
             , on "mousedown" <|
                 Json.Decode.map
-                    (StartEventDrag Move event)
+                    (StartDraggingEvent Move event)
                     Mouse.position
             ]
             []
@@ -170,7 +170,7 @@ eventExtendHandle draggingProtoEvent event =
             , style [ ( "cursor", cursor ) ]
             , on "mousedown" <|
                 Json.Decode.map
-                    (StartEventDrag Extend event)
+                    (StartDraggingEvent Extend event)
                     Mouse.position
             ]
             []
