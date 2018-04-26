@@ -1,15 +1,18 @@
 module Calendar.Types exposing (..)
 
 import Date exposing (Date)
+import Date.Extra as Date
 import Mouse
 
 
 type alias Model =
     { activeMode : Mode
     , selectedDate : Date
-    , draggingEventId : Maybe String
+    , draggingProtoEvent : Maybe ProtoEvent
     , dragMode : DragMode
-    , protoEvent : Maybe ProtoEvent
+    , protoEvent : ProtoEvent
+    , eventFormActive : Bool
+    , virtualEvents : List ProtoEvent
     }
 
 
@@ -18,15 +21,30 @@ type Mode
 
 
 type DragMode
-    = Move
+    = Create
+    | Move
     | Extend
 
 
 type alias ProtoEvent =
-    { start : Date
+    { id : Maybe String
+    , start : Date
     , finish : Date
     , label : String
     }
+
+
+initProtoEvent : Date -> ProtoEvent
+initProtoEvent date =
+    let
+        defaultFinish =
+            Date.add Date.Minute 15 date
+    in
+        { id = Nothing
+        , start = date
+        , finish = defaultFinish
+        , label = ""
+        }
 
 
 type Msg
@@ -39,8 +57,13 @@ type Msg
     | InputEventLabel ProtoEvent String
     | CloseEventForm
     | PersistProtoEvent ProtoEvent
-    | StartEventDrag DragMode String Mouse.Position
-    | DragEvent String Mouse.Position
-    | StopEventDrag String Mouse.Position
-    | AttemptEventUpdateFromDrag (Result String ( String, String ))
+    | StartDraggingEvent DragMode ProtoEvent Mouse.Position
+    | DragEvent DragMode ProtoEvent Mouse.Position
+    | StopDraggingEvent DragMode ProtoEvent Mouse.Position
+    | CacheEventUpdateFromFromDrag (Result String EventDrag)
+    | PersistEventUpdateFromDrag (Result String EventDrag)
     | RemoveEvent String
+
+
+type EventDrag
+    = EventDrag DragMode ProtoEvent String

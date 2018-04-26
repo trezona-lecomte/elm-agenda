@@ -108,6 +108,20 @@
     z-index: 1;
 }
 
+.elm-agenda__schedule-event-item-preview {
+    display: grid;
+    grid-template-rows: 3fr 1fr;
+    grid-template-columns: 1fr;
+    background-color: $grey-lighter;
+    border-radius: 2px;
+    padding: 1px;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    z-index: 2;
+}
+
 .elm-agenda__schedule-event-item {
     display: grid;
     grid-template-rows: 3fr 1fr;
@@ -115,38 +129,46 @@
     background-color: $primary;
     border-radius: 2px;
     padding: 1px;
-    z-index: 2;
     user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
+    z-index: 2;
 }
 
-.elm-agenda__schedule-event-label {
+.elm-agenda__schedule-event-content {
     display: flex;
     flex-flow: column wrap;
-    z-index: 3;
     grid-row: 1 / 4;
     grid-column: 1;
 }
 
-.elm-agenda__schedule-event-label-text {
+.elm-agenda__schedule-event-summary {
 }
 
 .elm-agenda__schedule-event-time {
-    flex-grow: 2;
+    flex-grow: 1;
+}
+
+.elm-agenda__schedule-event-remove-button {
+    margin-left: auto;
+    z-index: 4;
+}
+
+.schedule-event-remove-link {
+    color: $primary-invert;
 }
 
 .elm-agenda__schedule-event-move-handle {
-    z-index: 4;
     grid-row: 1 / 2;
     grid-column: 1;
+    z-index: 3;
 }
 
 .elm-agenda__schedule-event-extend-handle {
-    z-index: 4;
     grid-row: 2 / 3;
     grid-column: 1;
+    z-index: 3;
 }
 
 // 6. Import the rest of Bulma

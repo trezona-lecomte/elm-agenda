@@ -1,12 +1,13 @@
 module Calendar.Config exposing (Config, EventMapping)
 
+import Calendar.Types exposing (ProtoEvent)
 import Date exposing (Date)
 
 
 type alias Config event msg =
-    { createEvent : { start : Date, finish : Date, label : String } -> Maybe msg
-    , updateEventStart : String -> Date -> Maybe msg
-    , updateEventFinish : String -> Date -> Maybe msg
+    { createEvent : ProtoEvent -> Maybe msg
+    , updateEventStart : ProtoEvent -> Maybe msg
+    , updateEventFinish : ProtoEvent -> Maybe msg
     , removeEvent : String -> Maybe msg
     , eventMapping : EventMapping event
     }
