@@ -143,16 +143,16 @@ update config msg model =
             , Nothing
             )
 
-        DragEvent protoEvent mousePosition ->
+        DragEvent dragMode protoEvent mousePosition ->
             ( model
-            , encodeProtoEventAndMousePosition protoEvent mousePosition
+            , encodeEventDrag dragMode protoEvent mousePosition
                 |> Ports.dragEvent
             , Nothing
             )
 
-        StopEventDrag protoEvent mousePosition ->
+        StopEventDrag dragMode protoEvent mousePosition ->
             ( { model | draggingProtoEvent = Nothing }
-            , encodeProtoEventAndMousePosition protoEvent mousePosition
+            , encodeEventDrag dragMode protoEvent mousePosition
                 |> Ports.stopDraggingEvent
             , Nothing
             )
@@ -163,16 +163,13 @@ update config msg model =
                 Err error ->
                     ( model, Cmd.none, Nothing )
 
-                Ok ( protoEvent, quarter ) ->
+                Ok (EventDrag dragMode protoEvent quarter) ->
                     case dateFromQuarter model quarter of
                         Err err ->
                             ( model, Cmd.none, Nothing )
 
-                        -- TODO: We should really wrap up the info of what kind of
-                        -- update we're making in some type that can be constructed
-                        -- based on the knowledge of what port the update came through.
                         Ok newDate ->
-                            case model.dragMode of
+                            case dragMode of
                                 Create ->
                                     ( replaceProtoEvent model { protoEvent | finish = newDate }
                                     , Cmd.none
@@ -198,7 +195,7 @@ update config msg model =
                     ( model, Cmd.none, Nothing )
 
                 -- TODO: Reduce nesting
-                Ok ( protoEvent, quarter ) ->
+                Ok (EventDrag dragMode protoEvent quarter) ->
                     case dateFromQuarter model quarter of
                         Err err ->
                             let
@@ -209,11 +206,7 @@ update config msg model =
                                 ( model, Cmd.none, Nothing )
 
                         Ok newDate ->
-                            -- TODO: This is potentially buggy, because Ports
-                            -- are async so the dragMode could have
-                            -- changed from what it was when we sent the
-                            -- original request to the Port.
-                            case model.dragMode of
+                            case dragMode of
                                 Create ->
                                     ( model
                                     , Cmd.none
@@ -263,14 +256,20 @@ replaceProtoEvent model newEvent =
         { model | virtualEvents = events }
 
 
-encodeProtoEventAndMousePosition : ProtoEvent -> Mouse.Position -> String
-encodeProtoEventAndMousePosition event mousePosition =
+encodeEventDrag : DragMode -> ProtoEvent -> Mouse.Position -> String
+encodeEventDrag dragMode event mousePosition =
     Encode.encode 0 <|
         Encode.object
-            [ ( "event", protoEventEncoder event )
+            [ ( "dragMode", dragModeEncoder dragMode )
+            , ( "event", protoEventEncoder event )
             , ( "x", Encode.int mousePosition.x )
             , ( "y", Encode.int mousePosition.y )
             ]
+
+
+dragModeEncoder : DragMode -> Encode.Value
+dragModeEncoder dragMode =
+    Encode.string <| toString dragMode
 
 
 protoEventEncoder : ProtoEvent -> Encode.Value
@@ -444,8 +443,8 @@ subscriptions model =
         ( mouseMoves, mouseUps ) =
             case model.draggingProtoEvent of
                 Just event ->
-                    ( Mouse.moves <| DragEvent event
-                    , Mouse.ups <| StopEventDrag event
+                    ( Mouse.moves <| DragEvent model.dragMode event
+                    , Mouse.ups <| StopEventDrag model.dragMode event
                     )
 
                 Nothing ->
@@ -455,17 +454,18 @@ subscriptions model =
             [ mouseMoves
             , mouseUps
             , Ports.draggedEvent <|
-                decodeQuarter
+                decodeEventDrag
                     >> CacheEventUpdateFromFromDrag
             , Ports.stoppedDraggingEvent <|
-                decodeQuarter
+                decodeEventDrag
                     >> PersistEventUpdateFromDrag
             ]
 
 
-decodeQuarter : String -> Result String ( ProtoEvent, String )
-decodeQuarter =
-    Decode.map2 (,)
+decodeEventDrag : String -> Result String EventDrag
+decodeEventDrag =
+    Decode.map3 EventDrag
+        (Decode.field "dragMode" dragModeDecoder)
         (Decode.field "event" protoEventDecoder)
         (Decode.field "quarter" Decode.string)
         |> Decode.decodeString
@@ -479,3 +479,23 @@ protoEventDecoder =
         (Decode.field "start" Decode.date)
         (Decode.field "finish" Decode.date)
         (Decode.field "label" Decode.string)
+
+
+dragModeDecoder : Decode.Decoder DragMode
+dragModeDecoder =
+    Decode.string
+        |> Decode.andThen
+            (\str ->
+                case str of
+                    "Create" ->
+                        Decode.succeed Create
+
+                    "Move" ->
+                        Decode.succeed Move
+
+                    "Extend" ->
+                        Decode.succeed Extend
+
+                    other ->
+                        Decode.fail <| "Unknown dragMode: " ++ other
+            )

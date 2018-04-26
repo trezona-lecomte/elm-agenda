@@ -20,8 +20,8 @@
     <script>
      var app = Elm.Main.fullscreen();
 
-     function sendQuarterAtPosition(port, protoEventAndPosition) {
-       const input = JSON.parse(protoEventAndPosition);
+     function sendQuarterAtPosition(port, inputData) {
+       const input = JSON.parse(inputData);
 
        /* TODO: OffsetX - scrollLeft? */
        const offsetY = input.y - document.documentElement.scrollTop;
@@ -37,6 +37,7 @@
          port.send(
            JSON.stringify(
              {
+               dragMode: input.dragMode,
                event: {
                  eventId: input.event.eventId,
                  start: input.event.start,
@@ -50,12 +51,12 @@
        }
      }
 
-     app.ports.dragEvent.subscribe(function(protoEventAndPosition) {
-       sendQuarterAtPosition(app.ports.draggedEvent, protoEventAndPosition);
+     app.ports.dragEvent.subscribe(function(inputData) {
+       sendQuarterAtPosition(app.ports.draggedEvent, inputData);
      });
 
-     app.ports.stopDraggingEvent.subscribe(function(protoEventAndPosition) {
-       sendQuarterAtPosition(app.ports.stoppedDraggingEvent, protoEventAndPosition);
+     app.ports.stopDraggingEvent.subscribe(function(inputData) {
+       sendQuarterAtPosition(app.ports.stoppedDraggingEvent, inputData);
      });
     </script>
   </body>

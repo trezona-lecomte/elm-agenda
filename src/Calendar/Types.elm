@@ -68,8 +68,12 @@ type Msg
     | CloseEventForm
     | PersistProtoEvent ProtoEvent
     | StartEventDrag DragMode ProtoEvent Mouse.Position
-    | DragEvent ProtoEvent Mouse.Position
-    | StopEventDrag ProtoEvent Mouse.Position
-    | CacheEventUpdateFromFromDrag (Result String ( ProtoEvent, String ))
-    | PersistEventUpdateFromDrag (Result String ( ProtoEvent, String ))
+    | DragEvent DragMode ProtoEvent Mouse.Position
+    | StopEventDrag DragMode ProtoEvent Mouse.Position
+    | CacheEventUpdateFromFromDrag (Result String EventDrag)
+    | PersistEventUpdateFromDrag (Result String EventDrag)
     | RemoveEvent String
+
+
+type EventDrag
+    = EventDrag DragMode ProtoEvent String
