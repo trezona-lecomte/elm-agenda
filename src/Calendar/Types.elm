@@ -37,21 +37,11 @@ type alias ProtoEvent =
 initProtoEvent : Date -> ProtoEvent
 initProtoEvent date =
     let
-        defaultStart =
-            Date.fromParts
-                (Date.year date)
-                (Date.month date)
-                (Date.day date)
-                8
-                0
-                0
-                0
-
         defaultFinish =
-            Date.add Date.Minute 15 defaultStart
+            Date.add Date.Minute 15 date
     in
         { id = Nothing
-        , start = defaultStart
+        , start = date
         , finish = defaultFinish
         , label = ""
         }

@@ -1,7 +1,7 @@
 module Calendar exposing (init, subscriptions, update, view, syncEvents)
 
-import Basics.Extra exposing (fmod)
 import Calendar.Config exposing (Config, EventMapping)
+import Calendar.DateHelpers exposing (dateFromQuarterString)
 import Calendar.Ports as Ports
 import Calendar.Types exposing (..)
 import Date exposing (Date)
@@ -39,7 +39,7 @@ init : Mode -> EventMapping event -> List event -> ( Model, Cmd Msg )
 init mode eventMapping events =
     let
         selectedDate =
-            Date.fromParts 1970 Date.Jan 1 0 0 0 0
+            Date.fromParts 1970 Date.Jan 1 8 0 0 0
     in
         ( { activeMode = mode
           , selectedDate = selectedDate
@@ -164,26 +164,26 @@ update config msg model =
                     ( model, Cmd.none, Nothing )
 
                 Ok (EventDrag dragMode protoEvent quarter) ->
-                    case dateFromQuarter model quarter of
+                    case dateFromQuarterString model.selectedDate quarter of
                         Err err ->
                             ( model, Cmd.none, Nothing )
 
                         Ok newDate ->
                             case dragMode of
                                 Create ->
-                                    ( replaceProtoEvent model { protoEvent | finish = newDate }
+                                    ( replaceDraggedProtoEvent model { protoEvent | finish = newDate }
                                     , Cmd.none
                                     , Nothing
                                     )
 
                                 Move ->
-                                    ( replaceProtoEvent model (moveProtoEvent protoEvent newDate)
+                                    ( replaceDraggedProtoEvent model (moveProtoEvent protoEvent newDate)
                                     , Cmd.none
                                     , Nothing
                                     )
 
                                 Extend ->
-                                    ( replaceProtoEvent model { protoEvent | finish = newDate }
+                                    ( replaceDraggedProtoEvent model { protoEvent | finish = newDate }
                                     , Cmd.none
                                     , Nothing
                                     )
@@ -196,7 +196,7 @@ update config msg model =
 
                 -- TODO: Reduce nesting
                 Ok (EventDrag dragMode protoEvent quarter) ->
-                    case dateFromQuarter model quarter of
+                    case dateFromQuarterString model.selectedDate quarter of
                         Err err ->
                             let
                                 foo =
@@ -241,8 +241,8 @@ moveProtoEvent ({ id, start, finish, label } as protoEvent) newStart =
         { protoEvent | start = newStart, finish = newFinish }
 
 
-replaceProtoEvent : Model -> ProtoEvent -> Model
-replaceProtoEvent model newEvent =
+replaceDraggedProtoEvent : Model -> ProtoEvent -> Model
+replaceDraggedProtoEvent model newEvent =
     let
         replaceIfIdMatches event =
             if event.id == newEvent.id then
@@ -253,7 +253,7 @@ replaceProtoEvent model newEvent =
         events =
             List.map replaceIfIdMatches model.virtualEvents
     in
-        { model | virtualEvents = events }
+        { model | draggingProtoEvent = Just newEvent, virtualEvents = events }
 
 
 encodeEventDrag : DragMode -> ProtoEvent -> Mouse.Position -> String
@@ -280,54 +280,6 @@ protoEventEncoder { id, start, finish, label } =
         , ( "finish", Encode.string <| Date.toUtcIsoString finish )
         , ( "label", Encode.string label )
         ]
-
-
-dateFromQuarter : Model -> String -> Result String Date
-dateFromQuarter { selectedDate } quarter =
-    let
-        convert q =
-            let
-                ( hour, minute ) =
-                    ( floor fractionOfDayInHours, minutesAsFraction )
-
-                fractionOfDayInMinutes =
-                    -- N.B. +1 takes us to the 'end' of the quarter hour.
-                    (toFloat (q + 1) / quartersInDay) * minutesInDay
-
-                fractionOfDayInHours =
-                    -- The hour that this quarter represents, as a fraction. E.g. 13:30
-                    -- would be 13.5
-                    fractionOfDayInMinutes / minutesInHour
-
-                minutesAsFraction =
-                    (fmod fractionOfDayInMinutes 60) |> round
-            in
-                Date.fromParts
-                    (Date.year selectedDate)
-                    (Date.month selectedDate)
-                    (Date.day selectedDate)
-                    hour
-                    minute
-                    (Date.second selectedDate)
-                    (Date.millisecond selectedDate)
-    in
-        String.toInt quarter
-            |> Result.map convert
-
-
-quartersInDay : number
-quartersInDay =
-    96
-
-
-minutesInDay : number
-minutesInDay =
-    1440
-
-
-minutesInHour : number
-minutesInHour =
-    60
 
 
 syncEvents : EventMapping event -> List event -> Model -> Model

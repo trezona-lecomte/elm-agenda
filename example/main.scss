@@ -108,6 +108,20 @@
     z-index: 1;
 }
 
+.elm-agenda__schedule-event-item-preview {
+    display: grid;
+    grid-template-rows: 3fr 1fr;
+    grid-template-columns: 1fr;
+    background-color: $grey-lighter;
+    border-radius: 2px;
+    padding: 1px;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    z-index: 2;
+}
+
 .elm-agenda__schedule-event-item {
     display: grid;
     grid-template-rows: 3fr 1fr;

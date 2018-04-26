@@ -1,5 +1,6 @@
 module View.Daily exposing (..)
 
+import Calendar.DateHelpers exposing (dateFromQuarter)
 import Calendar.Types exposing (..)
 import Date exposing (Date)
 import Date.Extra as Date
@@ -35,22 +36,38 @@ simpleButton label msg =
 
 
 calendar : Model -> List ProtoEvent -> Html Msg
-calendar { activeMode, selectedDate, draggingProtoEvent } events =
+calendar { activeMode, selectedDate, dragMode, draggingProtoEvent } protoEvents =
     let
-        eventsOnSelectedDate =
+        protoEventsOnSelectedDate =
             List.filter
                 (\e -> Date.equalBy Date.Day e.start selectedDate)
-                events
+                protoEvents
     in
         div [ S.class "day-calendar" ]
             [ div [ S.class "hours-column" ]
                 (hoursHeader :: List.map hourItem hours)
             , div [ S.class "schedule-column" ]
                 (scheduleHeader activeMode
-                    :: List.map quarterHourItem quarterHours
-                    ++ List.map (eventItem draggingProtoEvent) eventsOnSelectedDate
+                    :: List.map (quarterHourItem selectedDate) quarterHours
+                    ++ List.map (eventItem False draggingProtoEvent) protoEventsOnSelectedDate
+                    ++ [ previewEventBeingCreated dragMode draggingProtoEvent ]
                 )
             ]
+
+
+previewEventBeingCreated : DragMode -> Maybe ProtoEvent -> Html Msg
+previewEventBeingCreated dragMode maybeProtoEvent =
+    case dragMode of
+        Create ->
+            case maybeProtoEvent of
+                Just protoEvent ->
+                    eventItem True (Just protoEvent) (Debug.log "previewing protoEvent: " protoEvent)
+
+                Nothing ->
+                    div [] []
+
+        _ ->
+            div [] []
 
 
 hoursHeader : Html Msg
@@ -68,8 +85,8 @@ hourItem hour =
     div [ S.class "hours-item" ] [ text hour ]
 
 
-quarterHourItem : Int -> Html Msg
-quarterHourItem quarter =
+quarterHourItem : Date -> Int -> Html Msg
+quarterHourItem selectedDate quarter =
     div
         [ S.class <| "schedule-quarter-hour-item"
         , id <| "quarter-" ++ toString quarter
@@ -77,17 +94,30 @@ quarterHourItem quarter =
             [ ( "grid-row", toString <| quarter + 1 )
             , ( "grid-column", "1" )
             ]
+        , on "mousedown" <|
+            Json.Decode.map
+                (StartDraggingEvent Create (initProtoEvent <| dateFromQuarter selectedDate quarter))
+                Mouse.position
         ]
         []
 
 
-eventItem : Maybe ProtoEvent -> ProtoEvent -> Html Msg
-eventItem draggingProtoEvent protoEvent =
+eventItem : Bool -> Maybe ProtoEvent -> ProtoEvent -> Html Msg
+eventItem preview draggingProtoEvent protoEvent =
     let
+        eventItemClass =
+            if preview then
+                S.class "schedule-event-item-preview"
+            else
+                S.class "schedule-event-item"
+
         shadowIfInteracting =
             case draggingProtoEvent of
-                Just _ ->
-                    ( "box-shadow", "2px 2px 1px 1px rgb(200, 200, 200)" )
+                Just event ->
+                    if event.id == protoEvent.id then
+                        ( "box-shadow", "2px 2px 1px 1px rgb(200, 200, 200)" )
+                    else
+                        ( "", "" )
 
                 Nothing ->
                     ( "", "" )
@@ -104,7 +134,7 @@ eventItem draggingProtoEvent protoEvent =
                         ]
     in
         div
-            [ S.class "schedule-event-item"
+            [ eventItemClass
             , style
                 [ gridRowForEvent ( protoEvent.start, protoEvent.finish )
                 , ( "grid-column", "1" )
