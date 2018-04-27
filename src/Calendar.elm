@@ -157,24 +157,22 @@ update config msg model =
                             ( model, Cmd.none, Nothing )
 
                         Ok newDate ->
-                            case dragMode of
-                                Create ->
-                                    ( replaceDraggedProtoEvent model { protoEvent | finish = newDate }
-                                    , Cmd.none
-                                    , Nothing
-                                    )
+                            let
+                                updatedProtoEvent =
+                                    case dragMode of
+                                        Create ->
+                                            { protoEvent | finish = newDate }
 
-                                Move ->
-                                    ( replaceDraggedProtoEvent model (moveProtoEvent protoEvent newDate)
-                                    , Cmd.none
-                                    , Nothing
-                                    )
+                                        Move ->
+                                            moveProtoEvent protoEvent newDate
 
-                                Extend ->
-                                    ( replaceDraggedProtoEvent model { protoEvent | finish = newDate }
-                                    , Cmd.none
-                                    , Nothing
-                                    )
+                                        Extend ->
+                                            { protoEvent | finish = newDate }
+                            in
+                                ( replaceDraggedProtoEvent model updatedProtoEvent
+                                , Cmd.none
+                                , Nothing
+                                )
 
         PersistEventUpdateFromDrag result ->
             case result of
