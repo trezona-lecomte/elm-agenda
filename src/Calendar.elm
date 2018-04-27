@@ -184,48 +184,29 @@ update config msg model =
                 Ok (EventDrag dragMode protoEvent quarter) ->
                     case dateFromQuarterString model.selectedDate quarter of
                         Err err ->
-                            let
-                                foo =
-                                    (Debug.log "error: " err)
-                            in
-                                -- TODO: Deal with errors properly
-                                ( model, Cmd.none, Nothing )
+                            -- TODO: Deal with errors properly
+                            ( model, Cmd.none, Nothing )
 
                         Ok newDate ->
-                            case dragMode of
-                                Create ->
-                                    ( { model | draggingProtoEvent = Nothing }
-                                    , Cmd.none
-                                    , config.createEvent { protoEvent | finish = newDate }
-                                    )
+                            let
+                                updatedModel =
+                                    { model | draggingProtoEvent = Nothing }
 
-                                Move ->
-                                    case protoEvent.id of
-                                        Nothing ->
-                                            ( { model | draggingProtoEvent = Nothing }
-                                            , Cmd.none
-                                            , Nothing
-                                            )
+                                consumerMsg =
+                                    case dragMode of
+                                        Create ->
+                                            config.createEvent { protoEvent | finish = newDate }
 
-                                        Just id ->
-                                            ( { model | draggingProtoEvent = Nothing }
-                                            , Cmd.none
-                                            , config.moveEvent id newDate
-                                            )
+                                        Move ->
+                                            Maybe.andThen (flip config.moveEvent newDate) protoEvent.id
 
-                                Extend ->
-                                    case protoEvent.id of
-                                        Nothing ->
-                                            ( { model | draggingProtoEvent = Nothing }
-                                            , Cmd.none
-                                            , Nothing
-                                            )
-
-                                        Just id ->
-                                            ( { model | draggingProtoEvent = Nothing }
-                                            , Cmd.none
-                                            , config.extendEvent id newDate
-                                            )
+                                        Extend ->
+                                            Maybe.andThen (flip config.extendEvent newDate) protoEvent.id
+                            in
+                                ( updatedModel
+                                , Cmd.none
+                                , consumerMsg
+                                )
 
         RemoveEvent eventId ->
             ( model, Cmd.none, config.removeEvent eventId )
