@@ -3,6 +3,7 @@ module Calendar.EventHelpers exposing (addEvent, removeEvent, moveEvent, extendE
 import Date exposing (Date)
 import Date.Extra as Date
 import Calendar.Types exposing (Event, Model, ProtoEvent)
+import List.Extra as List
 
 
 addEvent : Event e -> Model -> List (Event e) -> ( Model, List (Event e) )
@@ -19,22 +20,14 @@ removeEvent id model events =
 
 moveEvent : String -> Date -> Model -> List (Event e) -> ( Model, List (Event e) )
 moveEvent id newStart model events =
-    List.map (moveTargetEvent id newStart) events
+    List.updateIf (\e -> e.id == id) (updateEventStart newStart) events
         |> syncEvents model
 
 
 extendEvent : String -> Date -> Model -> List (Event e) -> ( Model, List (Event e) )
 extendEvent id newFinish model events =
-    List.map (extendTargetEvent id newFinish) events
+    List.updateIf (\e -> e.id == id) (updateEventFinish newFinish) events
         |> syncEvents model
-
-
-extendTargetEvent : String -> Date -> Event e -> Event e
-extendTargetEvent id newFinish event =
-    if event.id == id then
-        updateEventFinish newFinish event
-    else
-        event
 
 
 syncEvents : Model -> List (Event e) -> ( Model, List (Event e) )
@@ -53,14 +46,6 @@ virtualiseEvents =
             }
     in
         List.map virtualise
-
-
-moveTargetEvent : String -> Date -> Event e -> Event e
-moveTargetEvent id newStart event =
-    if event.id == id then
-        updateEventStart newStart event
-    else
-        event
 
 
 updateEventStart : Date -> Event e -> Event e
