@@ -157,22 +157,10 @@ update config msg model =
                             ( model, Cmd.none, Nothing )
 
                         Ok newDate ->
-                            let
-                                updatedProtoEvent =
-                                    case dragMode of
-                                        Create ->
-                                            { protoEvent | finish = newDate }
-
-                                        Move ->
-                                            moveProtoEvent protoEvent newDate
-
-                                        Extend ->
-                                            { protoEvent | finish = newDate }
-                            in
-                                ( replaceDraggedProtoEvent model updatedProtoEvent
-                                , Cmd.none
-                                , Nothing
-                                )
+                            ( replaceDraggedProtoEvent model (cacheEventUpdate dragMode protoEvent newDate)
+                            , Cmd.none
+                            , Nothing
+                            )
 
         PersistEventUpdateFromDrag result ->
             case result of
@@ -191,37 +179,47 @@ update config msg model =
                             let
                                 updatedModel =
                                     { model | draggingProtoEvent = Nothing }
-
-                                consumerMsg =
-                                    case dragMode of
-                                        Create ->
-                                            config.createEvent { protoEvent | finish = newDate }
-
-                                        Move ->
-                                            Maybe.andThen (flip config.moveEvent newDate) protoEvent.id
-
-                                        Extend ->
-                                            Maybe.andThen (flip config.extendEvent newDate) protoEvent.id
                             in
                                 ( updatedModel
                                 , Cmd.none
-                                , consumerMsg
+                                , persistEventUpdate dragMode protoEvent newDate config
                                 )
 
         RemoveEvent eventId ->
             ( model, Cmd.none, config.removeEvent eventId )
 
 
-moveProtoEvent : ProtoEvent -> Date -> ProtoEvent
-moveProtoEvent ({ id, start, finish, label } as protoEvent) newStart =
-    let
-        offset =
-            Date.diff Date.Minute start newStart
+cacheEventUpdate : DragMode -> ProtoEvent -> Date -> ProtoEvent
+cacheEventUpdate dragMode ({ start, finish } as protoEvent) date =
+    case dragMode of
+        Create ->
+            { protoEvent | finish = date }
 
-        newFinish =
-            Date.add Date.Minute offset finish
-    in
-        { protoEvent | start = newStart, finish = newFinish }
+        Move ->
+            let
+                offset =
+                    Date.diff Date.Minute start date
+
+                newFinish =
+                    Date.add Date.Minute offset finish
+            in
+                { protoEvent | start = date, finish = newFinish }
+
+        Extend ->
+            { protoEvent | finish = date }
+
+
+persistEventUpdate : DragMode -> ProtoEvent -> Date -> Config event msg -> Maybe msg
+persistEventUpdate dragMode protoEvent date config =
+    case dragMode of
+        Create ->
+            config.createEvent { protoEvent | finish = date }
+
+        Move ->
+            Maybe.andThen (flip config.moveEvent date) protoEvent.id
+
+        Extend ->
+            Maybe.andThen (flip config.extendEvent date) protoEvent.id
 
 
 replaceDraggedProtoEvent : Model -> ProtoEvent -> Model
