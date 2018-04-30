@@ -1,10 +1,10 @@
 module Main exposing (main)
 
 import Calendar
+import Calendar.EventHelpers as Calendar
 import Calendar.Types as Calendar
 import Calendar.Config as Calendar
 import Date exposing (Date)
-import Date.Extra as Date
 import Html exposing (..)
 import Html.Attributes exposing (class)
 import Result.Extra as Result
@@ -68,8 +68,8 @@ type Msg
 
 type CalendarMsg
     = CreateEvent Calendar.ProtoEvent
-    | UpdateEventStart Calendar.ProtoEvent
-    | UpdateEventFinish Calendar.ProtoEvent
+    | MoveEvent String Date
+    | ExtendEvent String Date
     | RemoveEvent String
 
 
@@ -99,32 +99,34 @@ handleCalendarUpdate msg model =
             case createEvent model protoEvent of
                 Ok event ->
                     let
-                        events =
-                            event :: model.events
+                        ( updatedCalendarModel, updatedEvents ) =
+                            Calendar.addEvent event model.calendarModel model.events
                     in
-                        { model
-                            | events = events
-                            , calendarModel = Calendar.syncEvents eventMapping events model.calendarModel
-                        }
+                        { model | events = updatedEvents, calendarModel = updatedCalendarModel }
 
                 Err error ->
                     { model | errors = error :: model.errors }
 
-        Just (UpdateEventStart protoEvent) ->
-            { model | events = List.map (moveEvent protoEvent) model.events }
+        Just (MoveEvent id newStart) ->
+            let
+                ( updatedCalendarModel, updatedEvents ) =
+                    Calendar.moveEvent id newStart model.calendarModel model.events
+            in
+                { model | events = updatedEvents, calendarModel = updatedCalendarModel }
 
-        Just (UpdateEventFinish protoEvent) ->
-            { model | events = List.map (changeEventFinish protoEvent) model.events }
+        Just (ExtendEvent id newFinish) ->
+            let
+                ( updatedCalendarModel, updatedEvents ) =
+                    Calendar.extendEvent id newFinish model.calendarModel model.events
+            in
+                { model | events = updatedEvents, calendarModel = updatedCalendarModel }
 
         Just (RemoveEvent eventId) ->
             let
-                events =
-                    List.filter (\e -> e.id /= eventId) model.events
+                ( updatedCalendarModel, updatedEvents ) =
+                    Calendar.removeEvent eventId model.calendarModel model.events
             in
-                { model
-                    | events = events
-                    , calendarModel = Calendar.syncEvents eventMapping events model.calendarModel
-                }
+                { model | events = updatedEvents, calendarModel = updatedCalendarModel }
 
         Nothing ->
             model
@@ -147,43 +149,6 @@ validateEvent start finish label id =
         , finish = finish
         , label = label
         }
-
-
-
--- TODO: Can the event update logic live in the library somewhere?
-
-
-moveEvent : Calendar.ProtoEvent -> Event -> Event
-moveEvent { id, start, finish, label } event =
-    case id of
-        Just eventId ->
-            if event.id == eventId then
-                let
-                    offset =
-                        Date.diff Date.Minute event.start start
-
-                    newFinish =
-                        Date.add Date.Minute offset event.finish
-                in
-                    { event | start = start, finish = newFinish }
-            else
-                event
-
-        Nothing ->
-            event
-
-
-changeEventFinish : Calendar.ProtoEvent -> Event -> Event
-changeEventFinish { id, start, finish, label } event =
-    case id of
-        Just eventId ->
-            if event.id == eventId && (Date.diff Date.Minute event.start finish) > 0 then
-                { event | finish = finish }
-            else
-                event
-
-        Nothing ->
-            event
 
 
 
@@ -221,12 +186,12 @@ calendarConfig =
             CreateEvent protoEvent |> Just
 
     -- These functions let you hook into the Calendar msgs that can be emitted.
-    , updateEventStart =
-        \protoEvent ->
-            UpdateEventStart protoEvent |> Just
-    , updateEventFinish =
-        \protoEvent ->
-            UpdateEventFinish protoEvent |> Just
+    , moveEvent =
+        \id newStart ->
+            MoveEvent id newStart |> Just
+    , extendEvent =
+        \id newFinish ->
+            ExtendEvent id newFinish |> Just
     , removeEvent =
         \eventId ->
             RemoveEvent eventId |> Just

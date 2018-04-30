@@ -1,7 +1,8 @@
-module Calendar exposing (init, subscriptions, update, view, syncEvents)
+module Calendar exposing (init, subscriptions, update, view)
 
 import Calendar.Config exposing (Config, EventMapping)
 import Calendar.DateHelpers exposing (dateFromQuarterString)
+import Calendar.EventHelpers exposing (virtualiseEvents)
 import Calendar.Ports as Ports
 import Calendar.Types exposing (..)
 import Date exposing (Date)
@@ -35,7 +36,7 @@ modes =
     [ Daily ]
 
 
-init : Mode -> EventMapping event -> List event -> ( Model, Cmd Msg )
+init : Mode -> EventMapping event -> List (Event e) -> ( Model, Cmd Msg )
 init mode eventMapping events =
     let
         selectedDate =
@@ -47,23 +48,10 @@ init mode eventMapping events =
           , dragMode = Move
           , protoEvent = initProtoEvent selectedDate
           , eventFormActive = False
-          , virtualEvents = virtualiseEvents eventMapping events
+          , virtualEvents = virtualiseEvents events
           }
         , Task.perform SetDate Date.now
         )
-
-
-virtualiseEvents : EventMapping event -> List event -> List ProtoEvent
-virtualiseEvents map =
-    let
-        virtualise event =
-            { id = Just <| map.id event
-            , start = map.start event
-            , finish = map.finish event
-            , label = map.label event
-            }
-    in
-        List.map virtualise
 
 
 
@@ -169,24 +157,22 @@ update config msg model =
                             ( model, Cmd.none, Nothing )
 
                         Ok newDate ->
-                            case dragMode of
-                                Create ->
-                                    ( replaceDraggedProtoEvent model { protoEvent | finish = newDate }
-                                    , Cmd.none
-                                    , Nothing
-                                    )
+                            let
+                                updatedProtoEvent =
+                                    case dragMode of
+                                        Create ->
+                                            { protoEvent | finish = newDate }
 
-                                Move ->
-                                    ( replaceDraggedProtoEvent model (moveProtoEvent protoEvent newDate)
-                                    , Cmd.none
-                                    , Nothing
-                                    )
+                                        Move ->
+                                            moveProtoEvent protoEvent newDate
 
-                                Extend ->
-                                    ( replaceDraggedProtoEvent model { protoEvent | finish = newDate }
-                                    , Cmd.none
-                                    , Nothing
-                                    )
+                                        Extend ->
+                                            { protoEvent | finish = newDate }
+                            in
+                                ( replaceDraggedProtoEvent model updatedProtoEvent
+                                , Cmd.none
+                                , Nothing
+                                )
 
         PersistEventUpdateFromDrag result ->
             case result of
@@ -198,32 +184,29 @@ update config msg model =
                 Ok (EventDrag dragMode protoEvent quarter) ->
                     case dateFromQuarterString model.selectedDate quarter of
                         Err err ->
-                            let
-                                foo =
-                                    (Debug.log "error: " err)
-                            in
-                                -- TODO: Deal with errors properly
-                                ( model, Cmd.none, Nothing )
+                            -- TODO: Deal with errors properly
+                            ( model, Cmd.none, Nothing )
 
                         Ok newDate ->
-                            case dragMode of
-                                Create ->
-                                    ( { model | draggingProtoEvent = Nothing }
-                                    , Cmd.none
-                                    , config.createEvent { protoEvent | finish = newDate }
-                                    )
+                            let
+                                updatedModel =
+                                    { model | draggingProtoEvent = Nothing }
 
-                                Move ->
-                                    ( { model | draggingProtoEvent = Nothing }
-                                    , Cmd.none
-                                    , config.updateEventStart { protoEvent | start = newDate }
-                                    )
+                                consumerMsg =
+                                    case dragMode of
+                                        Create ->
+                                            config.createEvent { protoEvent | finish = newDate }
 
-                                Extend ->
-                                    ( { model | draggingProtoEvent = Nothing }
-                                    , Cmd.none
-                                    , config.updateEventFinish { protoEvent | finish = newDate }
-                                    )
+                                        Move ->
+                                            Maybe.andThen (flip config.moveEvent newDate) protoEvent.id
+
+                                        Extend ->
+                                            Maybe.andThen (flip config.extendEvent newDate) protoEvent.id
+                            in
+                                ( updatedModel
+                                , Cmd.none
+                                , consumerMsg
+                                )
 
         RemoveEvent eventId ->
             ( model, Cmd.none, config.removeEvent eventId )
@@ -280,11 +263,6 @@ protoEventEncoder { id, start, finish, label } =
         , ( "finish", Encode.string <| Date.toUtcIsoString finish )
         , ( "label", Encode.string label )
         ]
-
-
-syncEvents : EventMapping event -> List event -> Model -> Model
-syncEvents map events model =
-    { model | virtualEvents = virtualiseEvents map events }
 
 
 

@@ -6,8 +6,8 @@ import Date exposing (Date)
 
 type alias Config event msg =
     { createEvent : ProtoEvent -> Maybe msg
-    , updateEventStart : ProtoEvent -> Maybe msg
-    , updateEventFinish : ProtoEvent -> Maybe msg
+    , moveEvent : String -> Date -> Maybe msg
+    , extendEvent : String -> Date -> Maybe msg
     , removeEvent : String -> Maybe msg
     , eventMapping : EventMapping event
     }
