@@ -91,7 +91,7 @@ update config msg model =
             , Nothing
             )
 
-        InputEventLabel proto label ->
+        ChangeEventLabel proto label ->
             let
                 updatedEvent =
                     { label = label
@@ -343,7 +343,7 @@ viewEventForm model =
                                     [ class "input"
                                     , type_ "text"
                                     , placeholder "Text input"
-                                    , onInput <| InputEventLabel model.protoEvent
+                                    , onInput <| ChangeEventLabel model.protoEvent
                                     ]
                                     []
                                 ]
