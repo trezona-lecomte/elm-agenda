@@ -63,7 +63,7 @@ type Msg
     | Previous
     | Next
     | AddEvent
-    | InputEventLabel ProtoEvent String
+    | ChangeEventLabel ProtoEvent String
     | CloseEventForm
     | PersistProtoEvent ProtoEvent
     | StartDraggingEvent DragMode ProtoEvent Mouse.Position
