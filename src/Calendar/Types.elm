@@ -7,6 +7,9 @@ import Mouse
 
 type alias Model =
     { activeMode : Mode
+    , showSettings : Bool
+    , useKeyboardShortcuts : Bool
+    , showKeyboardShortcutHelp : Bool
     , selectedDate : Date
     , draggingProtoEvent : Maybe ProtoEvent
     , dragMode : DragMode
@@ -57,7 +60,13 @@ initProtoEvent date =
 
 
 type Msg
-    = ChangeMode Mode
+    = NoOp -- TODO: Get rid of this
+    | ChangeMode Mode
+    | ShowSettings
+    | HideSettings
+    | ToggleKeyboardShortcuts
+    | ShowKeyboardShortcutHelp
+    | HideKeyboardShortcutHelp
     | SetDate Date
     | Today
     | Previous
