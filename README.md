@@ -93,8 +93,6 @@ state and hasn't been touched in a long while. I would rather start from scratch
 so that I can make my own design decisions and understand the code from the
 ground up.
 
-TODO: Summarise design choices I'm making differently to Elm Calendar.
-
 
 ## Feature Progress
 
@@ -111,9 +109,30 @@ TODO: Summarise design choices I'm making differently to Elm Calendar.
 * ~~Add new events (button)~~
 * ~~Remove events~~
 * ~~Drag to add new events~~
+* Keyboard shortcuts:
+  - See all shortcuts: ?
+  - Change your calendar view to the next date range: j or n
+  - Move to the current day: t
+  - Create a new event: c
+  - Delete an event: Backspace or Delete
 * Display: deal with overlapping events
 * Remove event confirmation
 
+
+Other keyboard shortcuts not yet applicable:
+- Day view: 1 or d
+- Week view: 2 or w
+- Month view: 3 or m
+- Custom view: 4 or x
+- Agenda view: 5 or a
+- See an event's details: e
+- Refresh your calendar: r
+- Move to add a calendar section: +
+- Put your cursor in the search box: /
+- Go to the Settings page: s
+- Undo: z
+- Save event (from the event details page): ⌘ + s (Mac) or Ctrl + s (Windows)
+- Return to calendar grid from an event details page: Esc
 
 ### Weekly Mode
 
@@ -145,9 +164,9 @@ Not yet started.
 
 Copyright 2018 Flux Federation, MIT license.
 
-This software was written by Kieran Trezona-le Comte, with the initial 2 days of
-implementation work done during the Flux Federation monthly 'hack days'. You can
-check out other useful stuff from Flux [here on Github][flux-github].
+This software was written by Kieran Trezona-le Comte, with the initial
+implementation done during the Flux Federation monthly 'hack days'. You
+can check out other useful stuff from Flux [here on Github][flux-github].
 
 
 [full-calendar-site]: https://fullcalendar.io
