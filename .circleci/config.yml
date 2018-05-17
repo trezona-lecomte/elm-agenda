@@ -27,6 +27,8 @@ jobs:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
 
-      - run: elm-live example/Main.elm --output=example/elm.js --dir=example
+      - run: yarn run sass example/main.scss example/main.css
+
+      - run: yarn run elm-live example/Main.elm --output=example/elm.js --dir=example
 
       - run: yarn test
