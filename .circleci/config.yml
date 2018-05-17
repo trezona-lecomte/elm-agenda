@@ -27,7 +27,7 @@ jobs:
       - save_cache:
           paths:
             - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
+          key: yarn-cache-{{ checksum "package.json" }}
 
 
       # Elm:
