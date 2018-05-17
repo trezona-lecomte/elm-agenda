@@ -10,9 +10,9 @@
   "scripts": {
     "build:example": "elm-make --yes example/Main.elm --output=example/elm.js",
     "server:example": "elm-live --yes example/Main.elm --output=example/elm.js --dir=example",
-    "test": "cypress run",
+    "test": "cypress run --reporter junit --reporter-options mochaFile=test-results/cypress/results.xml",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run --reporter junit --reporter-options \"mochaFile=test-results/cypress/results.xml\""
+    "cypress:run": "cypress run"
   },
   "repository": {
     "type": "git",
