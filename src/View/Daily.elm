@@ -129,7 +129,7 @@ eventItem preview draggingProtoEvent protoEvent =
 
                 Just id ->
                     div [ S.class "schedule-event-remove-button" ]
-                        [ a [ S.class "schedule-event-remove-link icon is-small", onClick <| RemoveEvent id ]
+                        [ a [ S.class "schedule-event-remove-link icon is-small" ]
                             [ i [ class "fas fa-times" ] [] ]
                         ]
     in
