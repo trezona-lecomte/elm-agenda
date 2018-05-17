@@ -31,6 +31,9 @@ jobs:
 
       - run: cd example && yarn install && yarn run sass main.scss main.css
 
-      - run: yarn run server:example
+      - run:
+          name: Start Elm Live Server
+          command: cd ~/repo && yarn run server:example
+          background: true
 
-      - run: yarn test
+      - run: sleep 5 && yarn test
