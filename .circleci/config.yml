@@ -29,6 +29,6 @@ jobs:
 
       - run: cd example && yarn install && yarn run sass main.scss main.css
 
-      - run: yarn run elm-live example/Main.elm --output=example/elm.js --dir=example
+      - run: yarn run elm-live example/Main.elm --output=example/elm.js --dir=example --yes
 
       - run: yarn test
