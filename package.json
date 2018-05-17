@@ -12,7 +12,7 @@
     "server:example": "elm-live --yes example/Main.elm --output=example/elm.js --dir=example",
     "test": "cypress run",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run --reporter junit --reporter-options \"mochaFile=test-results/cypress/results.xml\""
   },
   "repository": {
     "type": "git",
