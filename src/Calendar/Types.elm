@@ -11,11 +11,11 @@ type alias Model =
     , showSettings : Bool
     , useKeyboardShortcuts : Bool
     , showKeyboardShortcutHelp : Bool
+    , eventFormActive : Bool
     , selectedDate : Date
     , draggingProtoEvent : Maybe ProtoEvent
     , dragMode : DragMode
     , protoEvent : ProtoEvent
-    , eventFormActive : Bool
     , virtualEvents : List ProtoEvent
     }
 

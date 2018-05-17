@@ -47,11 +47,11 @@ init mode eventMapping events =
           , showSettings = False
           , useKeyboardShortcuts = True
           , showKeyboardShortcutHelp = False
+          , eventFormActive = False
           , selectedDate = selectedDate
           , draggingProtoEvent = Nothing
           , dragMode = Move
           , protoEvent = initProtoEvent selectedDate
-          , eventFormActive = False
           , virtualEvents = virtualiseEvents events
           }
         , Task.perform SetDate Date.now
