@@ -18,16 +18,29 @@ jobs:
       # Yarn:
       - restore_cache:
           keys:
-          - yarn-cache-{{ checksum "package.json" }}
+          - yarn-library-cache-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
-          - yarn-cache-
+          - yarn-library-cache-
 
       - run: yarn install
 
       - save_cache:
           paths:
             - node_modules
-          key: yarn-cache-{{ checksum "package.json" }}
+          key: yarn-library-cache-{{ checksum "package.json" }}
+
+      - restore_cache:
+          keys:
+          - yarn-example-cache-{{ checksum "example/package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - yarn-example-cache-
+
+      - run: cd ~/repo/example && yarn install && cd ~/repo
+
+      - save_cache:
+          paths:
+            - example/node_modules
+          key: yarn-example-cache-{{ checksum "example/package.json" }}
 
 
       # Elm:
