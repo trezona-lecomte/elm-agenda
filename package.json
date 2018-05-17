@@ -8,6 +8,8 @@
     "test": "test"
   },
   "scripts": {
+    "build:example": "elm-make --yes example/Main.elm --output=example/elm.js",
+    "server:example": "elm-live --yes example/Main.elm --output=example/elm.js --dir=example",
     "test": "cypress run",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run"
