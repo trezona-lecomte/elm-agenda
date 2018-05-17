@@ -2,6 +2,7 @@ module Calendar.Types exposing (..)
 
 import Date exposing (Date)
 import Date.Extra as Date
+import Keyboard
 import Mouse
 
 
@@ -60,13 +61,12 @@ initProtoEvent date =
 
 
 type Msg
-    = NoOp -- TODO: Get rid of this
-    | ChangeMode Mode
+    = ChangeMode Mode
     | ShowSettings
     | HideSettings
     | ToggleKeyboardShortcuts
-    | ShowKeyboardShortcutHelp
-    | HideKeyboardShortcutHelp
+    | KeyDown Keyboard.KeyCode
+    | KeyUp Keyboard.KeyCode
     | SetDate Date
     | Today
     | Previous

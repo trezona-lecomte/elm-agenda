@@ -65,9 +65,6 @@ init mode eventMapping events =
 update : Config event msg -> Msg -> Model -> ( Model, Cmd Msg, Maybe msg )
 update config msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none, Nothing )
-
         ChangeMode mode ->
             ( { model | activeMode = mode }, Cmd.none, Nothing )
 
@@ -80,11 +77,21 @@ update config msg model =
         ToggleKeyboardShortcuts ->
             ( { model | useKeyboardShortcuts = not model.useKeyboardShortcuts }, Cmd.none, Nothing )
 
-        ShowKeyboardShortcutHelp ->
-            ( { model | showKeyboardShortcutHelp = True }, Cmd.none, Nothing )
+        KeyDown keyCode ->
+            case keyCode of
+                191 ->
+                    ( { model | showKeyboardShortcutHelp = True }, Cmd.none, Nothing )
 
-        HideKeyboardShortcutHelp ->
-            ( { model | showKeyboardShortcutHelp = False }, Cmd.none, Nothing )
+                _ ->
+                    ( model, Cmd.none, Nothing )
+
+        KeyUp keyCode ->
+            case keyCode of
+                191 ->
+                    ( { model | showKeyboardShortcutHelp = False }, Cmd.none, Nothing )
+
+                _ ->
+                    ( model, Cmd.none, Nothing )
 
         SetDate date ->
             ( { model | selectedDate = date }, Cmd.none, Nothing )
@@ -516,7 +523,7 @@ subscriptions model =
 
         ( keyDowns, keyUps ) =
             if model.useKeyboardShortcuts then
-                ( Keyboard.downs handleKeyDown, Keyboard.ups handleKeyUp )
+                ( Keyboard.downs KeyDown, Keyboard.ups KeyUp )
             else
                 ( Sub.none, Sub.none )
     in
@@ -532,26 +539,6 @@ subscriptions model =
                 decodeEventDrag
                     >> PersistEventUpdateFromDrag
             ]
-
-
-handleKeyDown : Keyboard.KeyCode -> Msg
-handleKeyDown keyCode =
-    case keyCode of
-        191 ->
-            ShowKeyboardShortcutHelp
-
-        _ ->
-            NoOp
-
-
-handleKeyUp : Keyboard.KeyCode -> Msg
-handleKeyUp keyCode =
-    case keyCode of
-        191 ->
-            HideKeyboardShortcutHelp
-
-        _ ->
-            NoOp
 
 
 
