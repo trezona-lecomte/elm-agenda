@@ -6,6 +6,7 @@ version: 2
 jobs:
   build:
     docker:
+      # specify the version you desire here
       - image: circleci/node:7.10
 
     working_directory: ~/repo
@@ -13,14 +14,13 @@ jobs:
     steps:
       - checkout
 
-      # Download and cache dependencies
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - run: npm install
+      - run: yarn install
 
       - save_cache:
           paths:
@@ -29,5 +29,4 @@ jobs:
 
       - run: elm-live example/Main.elm --output=example/elm.js --dir=example
 
-      - run:
-          npm run cypress:run
+      - run: yarn test
