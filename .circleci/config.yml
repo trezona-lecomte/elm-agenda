@@ -79,7 +79,7 @@ jobs:
           command: cd ~/repo && yarn run server:example
           background: true
 
-      - run: sleep 5 && yarn test
+      - run: yarn test
 
       - store_test_results:
           path: test-results
