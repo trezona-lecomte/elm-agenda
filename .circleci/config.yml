@@ -14,11 +14,13 @@ jobs:
     steps:
       - checkout
 
+
+      # Yarn:
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package.json" }}
+          - yarn-cache-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+          - yarn-cache-
 
       - run: yarn install
 
@@ -27,10 +29,27 @@ jobs:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
 
+
+      # Elm:
+      - restore_cache:
+          keys:
+          - elm-cache-{{ checksum "elm-package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - elm-cache-
+
       - run: yarn run build:example
 
+      - save_cache:
+          paths:
+            - elm-stuff
+          key: elm-cache-{{ checksum "elm-package.json" }}
+
+
+      # Sass:
       - run: cd example && yarn install && yarn run sass main.scss main.css
 
+
+      # Run tests:
       - run:
           name: Start Elm Live Server
           command: cd ~/repo && yarn run server:example
