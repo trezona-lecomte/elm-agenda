@@ -14,6 +14,7 @@ import Json.Decode as Decode
 import Json.Decode.Extra as Decode
 import Json.Encode as Encode
 import Json.Encode.Extra as Encode
+import Keyboard
 import Labels
 import Mouse
 import Style as S
@@ -43,11 +44,14 @@ init mode eventMapping events =
             Date.fromParts 1970 Date.Jan 1 8 0 0 0
     in
         ( { activeMode = mode
+          , showSettings = False
+          , useKeyboardShortcuts = True
+          , showKeyboardShortcutHelp = False
+          , eventFormActive = False
           , selectedDate = selectedDate
           , draggingProtoEvent = Nothing
           , dragMode = Move
           , protoEvent = initProtoEvent selectedDate
-          , eventFormActive = False
           , virtualEvents = virtualiseEvents events
           }
         , Task.perform SetDate Date.now
@@ -63,6 +67,31 @@ update config msg model =
     case msg of
         ChangeMode mode ->
             ( { model | activeMode = mode }, Cmd.none, Nothing )
+
+        ShowSettings ->
+            ( { model | showSettings = True }, Cmd.none, Nothing )
+
+        HideSettings ->
+            ( { model | showSettings = False }, Cmd.none, Nothing )
+
+        ToggleKeyboardShortcuts ->
+            ( { model | useKeyboardShortcuts = not model.useKeyboardShortcuts }, Cmd.none, Nothing )
+
+        KeyDown keyCode ->
+            case keyCode of
+                191 ->
+                    ( { model | showKeyboardShortcutHelp = True }, Cmd.none, Nothing )
+
+                _ ->
+                    ( model, Cmd.none, Nothing )
+
+        KeyUp keyCode ->
+            case keyCode of
+                191 ->
+                    ( { model | showKeyboardShortcutHelp = False }, Cmd.none, Nothing )
+
+                _ ->
+                    ( model, Cmd.none, Nothing )
 
         SetDate date ->
             ( { model | selectedDate = date }, Cmd.none, Nothing )
@@ -291,9 +320,12 @@ view ({ activeMode, draggingProtoEvent, virtualEvents } as model) =
                     [ viewModeControls
                     , viewAddEventButton
                     , viewControls
+                    , viewSettingsControls
                     ]
                 , viewCalendar
                 , viewEventForm model
+                , viewSettingsForm model
+                , viewKeyboardShortcutHelp model
                 ]
             ]
 
@@ -318,6 +350,112 @@ viewAddEventButton =
         ]
 
 
+viewSettingsControls : Html Msg
+viewSettingsControls =
+    div [ S.class "settings-button" ]
+        [ a [ S.class "settings-link icon", onClick ShowSettings ]
+            [ i [ class "fa fa-cog" ] [] ]
+        ]
+
+
+viewSettingsForm : Model -> Html Msg
+viewSettingsForm model =
+    if model.showSettings then
+        div
+            [ class "modal is-active" ]
+            [ div [ class "modal-background" ]
+                []
+            , div [ class "modal-card" ]
+                [ header [ class "modal-card-head" ]
+                    [ p [ class "modal-card-title" ]
+                        [ text "Settings" ]
+                    , button [ class "delete", onClick HideSettings ]
+                        []
+                    ]
+
+                -- TODO: This checkbox is buggy; we send the msg twice
+                -- when the use clicks the label text.
+                , section [ class "modal-card-body" ]
+                    [ Html.form []
+                        [ div [ class "field" ]
+                            [ div [ class "control" ]
+                                [ label
+                                    [ S.class "checkbox"
+                                    , onClick ToggleKeyboardShortcuts
+                                    ]
+                                    [ input
+                                        [ type_ "checkbox"
+                                        , checked model.useKeyboardShortcuts
+                                        , style [ ( "margin-right", "5px" ) ]
+                                        ]
+                                        []
+                                    , text "Enable keyboard shortcuts"
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                , footer [ class "modal-card-foot" ]
+                    [ button
+                        [ class "button is-success"
+                        , onClick HideSettings
+                        ]
+                        [ text "Done" ]
+                    ]
+                ]
+            ]
+    else
+        div [ class "modal" ] []
+
+
+viewKeyboardShortcutHelp : Model -> Html Msg
+viewKeyboardShortcutHelp model =
+    if model.showKeyboardShortcutHelp then
+        div
+            [ class "modal is-active" ]
+            [ div [ class "modal-background" ]
+                []
+            , div [ class "modal-card" ]
+                [ header [ class "modal-card-head" ]
+                    [ p [ class "modal-card-title" ]
+                        [ text "Keyboard Shortcuts" ]
+                    ]
+                , section [ class "modal-card-body" ]
+                    [ table [ class "table is-bordered is-fullwidth" ]
+                        [ thead []
+                            [ tr []
+                                [ th [] [ text "Description" ]
+                                , th [] [ text "Shortcut" ]
+                                ]
+                            ]
+                        , tr []
+                            [ td [] [ text "Show shortcut help" ]
+                            , td [] [ text "/ or ?" ]
+                            ]
+                        , tr []
+                            [ td [] [ text "Move between date ranges" ]
+                            , td [] [ text "j or n" ]
+                            ]
+                        , tr []
+                            [ td [] [ text "Move to the current date" ]
+                            , td [] [ text "t" ]
+                            ]
+                        , tr []
+                            [ td [] [ text "Create a new event" ]
+                            , td [] [ text "c" ]
+                            ]
+                        , tr []
+                            [ td [] [ text "Delete an event" ]
+                            , td [] [ text "Backspace or Delete" ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+    else
+        div [ class "modal" ] []
+
+
 viewEventForm : Model -> Html Msg
 viewEventForm model =
     if model.eventFormActive then
@@ -328,7 +466,7 @@ viewEventForm model =
             , div [ class "modal-card" ]
                 [ header [ class "modal-card-head" ]
                     [ p [ class "modal-card-title" ]
-                        [ text "Modal title" ]
+                        [ text "Edit Event" ]
                     , button [ class "delete", onClick CloseEventForm ]
                         []
                     ]
@@ -340,7 +478,7 @@ viewEventForm model =
                                 [ input
                                     [ class "input"
                                     , type_ "text"
-                                    , placeholder "Text input"
+                                    , placeholder "My event"
                                     , onInput <| ChangeEventLabel model.protoEvent
                                     ]
                                     []
@@ -382,10 +520,18 @@ subscriptions model =
 
                 Nothing ->
                     ( Sub.none, Sub.none )
+
+        ( keyDowns, keyUps ) =
+            if model.useKeyboardShortcuts then
+                ( Keyboard.downs KeyDown, Keyboard.ups KeyUp )
+            else
+                ( Sub.none, Sub.none )
     in
         Sub.batch
             [ mouseMoves
             , mouseUps
+            , keyDowns
+            , keyUps
             , Ports.draggedEvent <|
                 decodeEventDrag
                     >> CacheEventUpdateFromFromDrag
@@ -393,6 +539,10 @@ subscriptions model =
                 decodeEventDrag
                     >> PersistEventUpdateFromDrag
             ]
+
+
+
+-- ENCODING / DECODING
 
 
 decodeEventDrag : String -> Result String EventDrag

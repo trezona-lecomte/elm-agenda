@@ -42,9 +42,14 @@
 /* ); */
 /* $colors: map-merge($colors, $addColors); */
 
+.elm-agenda__checkbox {
+    display: flex;
+    align-items: center;
+}
+
 .elm-agenda__calendar-header {
     display: grid;
-    grid-template-areas: "mc ae . . . . . . pc pc";
+    grid-template-areas: "mc ae . . . . . . pc pc s";
 }
 
 .elm-agenda__mode-controls {
@@ -59,6 +64,13 @@
     grid-area: pc;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+}
+
+.elm-agenda__settings-button {
+    grid-area: s;
+    display: flex;
+    justify-content: center;
     align-items: center;
 }
 

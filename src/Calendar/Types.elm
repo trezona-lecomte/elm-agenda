@@ -2,16 +2,20 @@ module Calendar.Types exposing (..)
 
 import Date exposing (Date)
 import Date.Extra as Date
+import Keyboard
 import Mouse
 
 
 type alias Model =
     { activeMode : Mode
+    , showSettings : Bool
+    , useKeyboardShortcuts : Bool
+    , showKeyboardShortcutHelp : Bool
+    , eventFormActive : Bool
     , selectedDate : Date
     , draggingProtoEvent : Maybe ProtoEvent
     , dragMode : DragMode
     , protoEvent : ProtoEvent
-    , eventFormActive : Bool
     , virtualEvents : List ProtoEvent
     }
 
@@ -58,6 +62,11 @@ initProtoEvent date =
 
 type Msg
     = ChangeMode Mode
+    | ShowSettings
+    | HideSettings
+    | ToggleKeyboardShortcuts
+    | KeyDown Keyboard.KeyCode
+    | KeyUp Keyboard.KeyCode
     | SetDate Date
     | Today
     | Previous
