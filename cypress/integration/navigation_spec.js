@@ -30,17 +30,29 @@ describe('Navigation', function() {
       cy.contains(shortFormat(today));
     });
 
-    it('paginates in daily intervals', function() {
-      cy.contains('>').click();
-      cy.contains(shortFormat(tomorrow));
+    context('when using the mouse', function() {
+      it('paginates in daily intervals', function() {
+        cy.contains('>').click();
+        cy.contains(shortFormat(tomorrow));
 
-      cy.contains('<').click().click();
-      cy.contains(shortFormat(yesterday));
+        cy.contains('<').click().click();
+        cy.contains(shortFormat(yesterday));
+      });
+
+      it('allows resetting to today', function() {
+        cy.contains('Today').click();
+        cy.contains(shortFormat(today));
+      });
     });
 
-    it('allows resetting to today', function() {
-      cy.contains('Today').click();
-      cy.contains(shortFormat(today));
+    context('when using the keyboard', function() {
+      it('paginates in daily intervals', function() {
+        cy.get('body').type('n');
+        cy.contains(shortFormat(tomorrow));
+
+        cy.get('body').type('jj');
+        cy.contains(shortFormat(yesterday));
+      });
     });
   });
 });

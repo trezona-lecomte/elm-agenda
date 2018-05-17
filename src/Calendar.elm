@@ -78,12 +78,31 @@ update config msg model =
             ( { model | useKeyboardShortcuts = not model.useKeyboardShortcuts }, Cmd.none, Nothing )
 
         KeyDown keyCode ->
-            case keyCode of
-                191 ->
-                    ( { model | showKeyboardShortcutHelp = True }, Cmd.none, Nothing )
+            if model.eventFormActive then
+                ( model, Cmd.none, Nothing )
+            else
+                case keyCode of
+                    191 ->
+                        ( { model | showKeyboardShortcutHelp = True }, Cmd.none, Nothing )
 
-                _ ->
-                    ( model, Cmd.none, Nothing )
+                    78 ->
+                        ( { model | selectedDate = Date.add Date.Day 1 model.selectedDate }
+                        , Cmd.none
+                        , Nothing
+                        )
+
+                    74 ->
+                        ( { model | selectedDate = Date.add Date.Day -1 model.selectedDate }
+                        , Cmd.none
+                        , Nothing
+                        )
+
+                    code ->
+                        let
+                            foo =
+                                Debug.log "code: " code
+                        in
+                            ( model, Cmd.none, Nothing )
 
         KeyUp keyCode ->
             case keyCode of

@@ -7,6 +7,6 @@ elm.js
 main.css
 main.css.map
 node_modules
-cypress/videos
+cypress
 example/yarn.lock
 test-results
