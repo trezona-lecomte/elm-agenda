@@ -8,3 +8,4 @@ main.css
 main.css.map
 node_modules
 cypress/videos
+example/yarn.lock
