@@ -69,10 +69,10 @@ jobs:
       - run: sleep 5 && yarn test
 
       - store_test_results:
-          path: test-results/cypress
+          path: test-results
 
       - store_artifacts:
-          path: test-results/cypress/videos
+          path: cypress/videos
 
       - store_artifacts:
-          path: test-results/cypress/screenshots
+          path: cypress/screenshots
