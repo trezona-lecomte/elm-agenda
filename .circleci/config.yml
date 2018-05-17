@@ -33,16 +33,27 @@ jobs:
       # Elm:
       - restore_cache:
           keys:
-          - elm-cache-{{ checksum "elm-package.json" }}
+          - elm-calendar-cache-{{ checksum "elm-package.json" }}
           # fallback to using the latest cache if no exact match is found
-          - elm-cache-
+          - elm-calendar-cache-
+
+      - restore_cache:
+          keys:
+          - elm-example-cache-{{ checksum "example/elm-package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - elm-example-cache-
 
       - run: yarn run build:example
 
       - save_cache:
           paths:
             - elm-stuff
-          key: elm-cache-{{ checksum "elm-package.json" }}
+          key: elm-calendar-cache-{{ checksum "elm-package.json" }}
+
+      - save_cache:
+          paths:
+            - example/elm-stuff
+          key: elm-example-cache-{{ checksum "example/elm-package.json" }}
 
 
       # Sass:
